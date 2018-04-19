@@ -47,6 +47,12 @@ if __name__ == "__main__":
 
 在settings或local_settings的目录中，可以创建数个py文件，每个py文件都可以作为独立的配置文件，py文件名即配置文件名。
 
+#### 配置文件的继承
+
+如果需要继承其他配置文件，可以在配置文件的顶部，通过`from xxx import xxx`加载其他配置文件中项目。
+
+例如`from .common import *`，代表从同级目录的common中继承配置文件项目。
+
 #### 配置文件优先顺序
 
 如果项目根目录中不存在local_settings，则直接使用settings的配置。
