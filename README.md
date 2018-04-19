@@ -67,4 +67,6 @@ if __name__ == "__main__":
 
 使用命令 python manage.py -cfg=default runserver启动项目。
 
-default为settings或local_settings目录下的py文件，default即对应default.py。如果使用django自带的—settings参数启动项目，则本地配置文件local_settings不会生效，具体生效
+default为settings或local_settings目录下的py文件，default即对应default.py。
+
+如果使用django自带的—settings参数启动项目，则本地配置文件local_settings不会生效，实际生效的是—settings参数指定的py文件，这点和django原来是完全一样的。
