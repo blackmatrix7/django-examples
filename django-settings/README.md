@@ -41,6 +41,17 @@ if __name__ == "__main__":
     execute_from_command_line(cmdline.command)
 ```
 
+修改项目proj目录下的wsgi.py
+
+```python
+import os
+from toolkit.cmdline import cmdline
+from django.core.wsgi import get_wsgi_application
+# 将os.environ.setdefault("DJANGO_SETTINGS_MODULE", "proj.settings")做如下修改
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", cmdline.settings)
+application = get_wsgi_application()
+```
+
 #### 创建配置文件
 
 在项目根目录下，创建settings和local_settings两个包，用于存放配置文件。同时修改.gitignore，避免将local_settings目录上传的git服务器。
