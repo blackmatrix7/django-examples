@@ -130,3 +130,58 @@ DATABASE_APPS_MAPPING = {
 
 `python manage.py migrate --database=driver`
 
+## 验证
+
+### 使用views验证
+
+增加views，访问时添加数据，用来验证配置是否成功。
+
+boss/views.py
+
+```python
+from .models import Boss
+from django.shortcuts import HttpResponse
+
+
+# Create your views here.
+def add_boss(request):
+    Boss(name=request.GET['name'], age=request.GET['age']).save()
+    return HttpResponse('success')
+```
+
+proj/urls.py
+
+```python
+from django.urls import path
+from boss.views import add_boss
+from django.contrib import admin
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('add_boss/', add_boss),
+]
+```
+
+访问： http://127.0.0.1:8000/add_boss/?name=jack&age=47 返回success。
+
+查询boss.sqlit3里的boss表，确认数据添加成功。
+
+其他的App同样添加类型的views，以进一步验证。
+
+http://127.0.0.1:8000/add_driver/?name=Ace&age=43
+
+http://127.0.0.1:8000/add_client/?name=Park&age=76
+
+### 使用admin验证
+
+boss/admin.py
+
+```python
+from django.contrib import admin
+from .models import Boss
+
+# Register your models here.
+admin.site.register(Boss)
+```
+
+其他的app也进行类型的配置，最终在django admin中操作， 同样也可以确认不同的app存储在不同的数据库中，所以这样的配置对django admin也是同样有效的。
