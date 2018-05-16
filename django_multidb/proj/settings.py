@@ -79,8 +79,28 @@ WSGI_APPLICATION = 'proj.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, 'proj.sqlite3'),
+    },
+    'client': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'client.sqlite3'),
+    },
+    'driver': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'driver.sqlite3'),
+    },
+    'boss': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'boss.sqlite3'),
     }
+}
+
+DATABASE_ROUTERS = ['proj.database_router.DatabaseAppsRouter']
+
+DATABASE_APPS_MAPPING = {
+    'boss': 'boss',
+    'client': 'client',
+    'driver': 'driver'
 }
 
 
