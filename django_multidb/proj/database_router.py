@@ -12,7 +12,7 @@ from django.conf import settings
 DATABASE_MAPPING = settings.DATABASE_APPS_MAPPING
 
 
-class DatabaseAppsRouter(object):
+class DatabaseAppsRouter:
     """
     A router to control all database operations on models for different
     databases.
