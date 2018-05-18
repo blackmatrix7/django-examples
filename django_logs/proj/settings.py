@@ -119,6 +119,11 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# 日志部分配置，参考Django官方手册
+# https://docs.djangoproject.com/en/2.0/topics/logging/#examples
+# LOGGING属性实际上是一个dictConfig
+# 关于dictConfig的配置，参考Python官方手册
+# https://docs.python.org/3/library/logging.config.html#logging-config-dictschema
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -128,20 +133,25 @@ LOGGING = {
         },
     },
     'handlers': {
+        # 输出日志的控制台
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
         },
+        # 输出日志到文件，按日期滚动
         'file': {
             'level': 'DEBUG',
             'class': 'logging.handlers.TimedRotatingFileHandler',
+            # TimedRotatingFileHandler的参数
+            # 参照https://docs.python.org/3/library/logging.handlers.html#timedrotatingfilehandler
             'filename': 'logs/manage.log',
             'when': 'midnight',
             'interval': 1,
-            'backupCount': 10,
+            'backupCount': 100,
             'formatter': 'verbose'
         },
+        # 发送邮件，目前腾讯云、阿里云的服务器对外发送邮件都有限制，暂时不使用
         'email': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler',
@@ -149,6 +159,7 @@ LOGGING = {
         }
     },
     'loggers': {
+        # 不同的logger
         'django': {
             'handlers': ['console', 'file', 'email'],
             'level': 'INFO',
