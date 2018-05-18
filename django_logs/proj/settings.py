@@ -134,9 +134,12 @@ LOGGING = {
             'formatter': 'verbose'
         },
         'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
+            'level': 'DEBUG',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': 'logs/manage.log',
+            'when': 'midnight',
+            'interval': 1,
+            'backupCount': 10,
             'formatter': 'verbose'
         },
         'email': {
