@@ -18,6 +18,16 @@ djang 2.0.5
 
 ### 修改配置文件
 
+日志部分配置，参考Django官方手册
+
+https://docs.djangoproject.com/en/2.0/topics/logging/#examples
+
+LOGGING属性实际上是一个dictConfig
+
+关于dictConfig的配置，参考Python官方手册
+
+https://docs.python.org/3/library/logging.config.html#logging-config-dictschema
+
 ```python
 LOGGING = {
     'version': 1,
@@ -76,7 +86,53 @@ mkdir logs
 
 ```python
 import logging
-
 logger = logging.getLogger('django')
+```
+
+## 验证
+
+### 创建app
+
+```
+python manage.py startapp app
+```
+
+### 编写视图函数
+
+编写一个视图函数，用于往日志文件写入日志
+
+django_logs/app/views.py
+
+```python
+from logger import logger
+from django.shortcuts import HttpResponse
+
+def test_logger(request):
+    logger.info('test log')
+    return HttpResponse('test log')
+```
+
+### 配置Url
+
+django_logs/proj/urls.py
+
+```python
+from app import views
+from django.contrib import admin
+from django.urls import path
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('test_log/', views.test_logger),
+]
+```
+
+### 调用
+
+访问 [http://127.0.0.1:8000/test_log/](http://127.0.0.1:8000/test_log/) ，在logs/manage.log中成功写入
+
+```
+[2018-05-18 08:35:44,317] [INFO] test log
+[2018-05-18 08:35:44,318] [INFO] "GET /test_log/ HTTP/1.1" 200 8
 ```
 
