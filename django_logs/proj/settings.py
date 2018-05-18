@@ -145,6 +145,7 @@ LOGGING = {
             'class': 'logging.handlers.TimedRotatingFileHandler',
             # TimedRotatingFileHandler的参数
             # 参照https://docs.python.org/3/library/logging.handlers.html#timedrotatingfilehandler
+            # 目前设定每天一个日志文件
             'filename': 'logs/manage.log',
             'when': 'midnight',
             'interval': 1,
