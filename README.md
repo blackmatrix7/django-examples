@@ -9,3 +9,7 @@
 ## [Django MultiDB](https://github.com/blackmatrix7/django-examples/tree/master/django_multidb)
 
 Django多数据库配置，不同的App使用不同的数据库。
+
+## [Django Logs](https://github.com/blackmatrix7/django-examples/tree/master/django_logs)
+
+Django 日志配置，支持根据时间滚动。
