@@ -19,8 +19,8 @@ class Person(models.Model):
     def natural_key(self):
         return [self.first_name, self.last_name]
 
-    class Meta:
-        unique_together = (('first_name', 'last_name'),)
+    # class Meta:
+        # unique_together = (('first_name', 'last_name'),)
 
 
 class Book(models.Model):
