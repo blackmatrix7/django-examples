@@ -35,7 +35,6 @@ INSERT INTO "app_book"("id", "name", "author_id") VALUES (1, 'Rainbow Six', 1);
 直接使用serializers.serialize对queryset进行序列化。
 
 ```python
-book = Book.objects.all()
 json_str = serialize('json', Book.objects.all())
 ```
 
@@ -60,7 +59,51 @@ json_str = serialize('json', Book.objects.all())
 
 Book表中的author为外键，序列化完成后，只显示外键的值，而不是对象（ "author":1）。将序列化后的数据提供给前端时，返回author等于1的意义不大，前端更需要的应该是直接返回作者的姓名。
 
-这个时候就需要使用natural keys。
+这个时候就需要使用natural keys，修改原先的Person Model，增加natural_key方法，返回first_name与last_name。
+
+app/models.py
+
+```python
+class Person(models.Model):
+
+    class Meta:
+        unique_together = (('first_name', 'last_name'),)
+
+    birthdate = models.DateField()
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+
+    def natural_key(self):
+        return [self.first_name, self.last_name]
+```
+
+修改序列化时的方法，增加参数use_natural_foreign_keys=True
+
+app/views.py
+
+```python
+json_str = serialize('json', Book.objects.all(), use_natural_foreign_keys=True)
+```
+
+重新进行序列化后，可以看到author不为1，而是返回first_name和last_name
+
+```json
+{
+    "books":[
+        {
+            "pk":1,
+            "model":"app.book",
+            "fields":{
+                "author":[
+                    "Tom",
+                    "Clancy"
+                ],
+                "name":"Rainbow Six"
+            }
+        }
+    ]
+}
+```
 
 
 
@@ -74,82 +117,12 @@ djang 2.0.5
 
 sqlite3
 
-### 创建项目
+### 需要的包
 
-django-admin startproject proj
+Django 2.0.5
 
-cd proj
+### 运行
 
-python manange.py startapp app
+python manage.py runserver
 
-## 开始
-
-### 一些简单的准备
-
-#### 创建model
-
-一个简单的一对多表结构
-
-app/models.py
-
-```python
-from django.db import models
-
-class Person(models.Model):
-
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-
-    birthdate = models.DateField()
-
-    def natural_key(self):
-        return [self.first_name, self.last_name]
-
-class Book(models.Model):
-    name = models.CharField(max_length=100)
-    author = models.ForeignKey(Person, on_delete=models.CASCADE)
-```
-
-#### 写入测试数据
-
-```sql
-INSERT INTO "app_person"("id", "first_name", "last_name", "birthdate") VALUES ('1', 'Tom', 'Clancy', '1947/04/12');
-INSERT INTO "app_book"("id", "name", "author_id") VALUES (1, 'Rainbow Six', 1);
-```
-
-#### 序列化对象
-
-现在，我们创建一个视图，用来返回book表的数据。
-
-```python
-import json
-from .models import Book
-from django.http import JsonResponse
-from django.core.serializers import serialize
-
-# Create your views here.
-def get_books(request):
-    book = Book.objects.all()
-    json_str = serialize('json', book)
-    return JsonResponse({'books': json.loads(json_str)})
-```
-
-这里使用django的serialize方法，用于将model对象序列化成json。
-
-serialize相关的可以参考Django官方手册
-
-https://docs.djangoproject.com/en/2.0/topics/serialization/
-
-#### 注册Url
-
-proj/urls.py
-
-```python
-from app import views
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('books/', views.get_books),
-]
-```
-
+访问 http://127.0.0.1:8000/books/
