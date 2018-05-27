@@ -105,6 +105,8 @@ json_str = serialize('json', Book.objects.all(), use_natural_foreign_keys=True)
 }
 ```
 
+反序列化
+
 
 
 ## 准备
