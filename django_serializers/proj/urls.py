@@ -20,5 +20,7 @@ from django.contrib import admin
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('books/', views.get_books),
-    path('set_books/', views.set_books),
+    path('save_books/', views.save_books),
+    path('save_books_err/', views.save_books_err),
+    path('update_books/', views.update_books),
 ]

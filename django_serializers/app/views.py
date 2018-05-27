@@ -13,10 +13,27 @@ def get_books(request):
 
 
 @csrf_exempt
-def set_books(request):
-    for deserialized_object in serializers.deserialize('json', request.body.decode()):
+def save_books(request):
+    json_str = '[{"model":"app.book","fields":{"name":"RainbowSix","author":["Tom","Clancy"]}},' \
+               '{"model":"app.book","fields":{"name":"NightMoves","author":["Tom","Clancy"]}}]'
+    for deserialized_object in serializers.deserialize('json', json_str):
         deserialized_object.save()
     return JsonResponse({'success': True})
 
+
+def save_books_err(request):
+    json_str = '[{"model":"app.book","fields":{"name":null,"author":["Tom","Clancy"]}},' \
+               '{"model":"app.book","fields":{"name":null,"author":["Tom","Clancy"]}}]'
+    for deserialized_object in serializers.deserialize('json', json_str):
+        deserialized_object.save()
+    return JsonResponse({'success': True})
+
+
+def update_books(request):
+    json_str = '[{"fields":{"author":1,"name":"Rainbow Six2"},"pk":1,"model":"app.book"},' \
+               '{"fields":{"author":1,"name":"Night Moves"},"pk":2,"model":"app.book"}]'
+    for deserialized_object in serializers.deserialize('json', json_str):
+        deserialized_object.save()
+    return JsonResponse({'success': True})
 
 
