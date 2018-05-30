@@ -12,7 +12,7 @@ class Customer(models.Model):
 
     customer_name = models.CharField('姓名', max_length=24)
     age = models.IntegerField('年龄')
-    shopping = models.ManyToManyField(Product, through='Shopping', through_fields=('customer', 'product'))
+    products = models.ManyToManyField(Product, through='Shopping', through_fields=('customer', 'product'))
 
 
 class Shopping(models.Model):
