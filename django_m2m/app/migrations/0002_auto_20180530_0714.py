@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='customer',
-            name='products',
+            name='customer_products',
             field=models.ManyToManyField(through='app.Shopping', to='app.Product'),
         ),
     ]
