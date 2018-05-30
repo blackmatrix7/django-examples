@@ -4,13 +4,14 @@ from django.db import models
 
 
 class Product(models.Model):
-    product_name = models.CharField('商品名称', max_length=24)
+
+    name = models.CharField('商品名称', max_length=24)
     price = models.DecimalField('价格', max_digits=10, decimal_places=6)
 
 
 class Customer(models.Model):
 
-    customer_name = models.CharField('姓名', max_length=24)
+    name = models.CharField('姓名', max_length=24)
     age = models.IntegerField('年龄')
     products = models.ManyToManyField(Product, through='Shopping', through_fields=('customer', 'product'))
 
