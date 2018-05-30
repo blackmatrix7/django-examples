@@ -5,17 +5,14 @@ from django.forms.models import model_to_dict
 # Create your views here.
 
 
-def shopping_list(request):
-    customer_id = request.GET.dict()['customer_id']
-    model_list = Shopping.objects.filter(customer__id=customer_id).values('customer__customer_name', 'count',
-                                                                          'product__product_name', 'product__price').all()
-    return JsonResponse([model for model in model_list], safe=False)
-
-
 def customer_products(request):
+    """
+    查询某个客户所有购买过的商品和数量
+    :param request:
+    :return:
+    """
     customer = Customer.objects.get(id=1)
-    products = customer.products.all()
-    return JsonResponse([model_to_dict(product) for product in products], safe=False)
+    return JsonResponse([model_to_dict(product) for product in customer.products.all()], safe=False)
 
 
 def change(request):
