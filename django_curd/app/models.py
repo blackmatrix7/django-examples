@@ -3,6 +3,12 @@ from django.db import models
 # Create your models here.
 
 
+class Tag(models.Model):
+
+    name = models.CharField('标签', max_length=24)
+    products = models.ManyToManyField('Product')
+
+
 class Product(models.Model):
 
     name = models.CharField('商品名称', max_length=24)
