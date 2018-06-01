@@ -5,7 +5,7 @@ from .models import Customer, Product, Tag
 
 
 # Create your tests here.
-class StudentTestCase(TestCase):
+class CURDTestCase(TestCase):
 
     def setUp(self):
         # 基础数据
@@ -67,6 +67,12 @@ class StudentTestCase(TestCase):
         customer = Customer.objects.filter(age=21).exclude(name='张三').order_by('id').first()
         self.assertEqual(customer.name, '王五')
 
+    def test_return_list(self):
+        # 以list的格式返回数据，实际上是tuple
+        customers = Customer.objects.values_list('name').all()
+        for customer in customers:
+            self.assertIsInstance(customer, tuple)
+
     def test_many_to_many(self):
         """
         测试多对多，没有自己指定关系表
@@ -76,8 +82,6 @@ class StudentTestCase(TestCase):
         # 新增标签与商品的关系
         # product = Product.objects.get(name='手机')
         # product
-
-
 
     def tearDown(self):
         pass
