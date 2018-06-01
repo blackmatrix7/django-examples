@@ -19,7 +19,3 @@ Django 日志配置，支持根据时间滚动。
 ## [Django Serializers](https://github.com/blackmatrix7/django-examples/tree/master/django_serializers)
 
 Django Model 序列化与反序列化的例子
-
-## Django rest
-
-Django Rest 框架练手与例子
