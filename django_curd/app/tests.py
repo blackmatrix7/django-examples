@@ -68,10 +68,17 @@ class CURDTestCase(TestCase):
         self.assertEqual(customer.name, '王五')
 
     def test_return_list(self):
-        # 以list的格式返回数据，实际上是tuple
+        # 返回QuertSet，每个元素都是tuple
         customers = Customer.objects.values_list('name').all()
         for customer in customers:
             self.assertIsInstance(customer, tuple)
+        # flat=True时，返回QuertSet，所有的数据组成list
+        customers = Customer.objects.values_list('name', flat=True).all()
+        for customer in customers:
+            self.assertIsInstance(customer, str)
+        # 查询单条数据
+        customer = Customer.objects.values_list('name').first()
+        self.assertIsInstance(customer, tuple)
 
     def test_many_to_many(self):
         """
