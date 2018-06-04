@@ -1,3 +1,4 @@
+from django.db.models import F
 from django.test import TestCase
 from django.db import transaction
 from django.core.exceptions import *
@@ -14,11 +15,11 @@ class CURDTestCase(TestCase):
             Customer.objects.create(name='李四', age=72)
             Customer.objects.create(name='王五', age=21)
             Customer.objects.create(name='刘六', age=13)
-            Product.objects.create(name='手机', price=3999)
-            Product.objects.create(name='电脑', price=7999)
-            Product.objects.create(name='耳机', price=399)
-            Product.objects.create(name='矿泉水', price=2)
-            Product.objects.create(name='饼干', price=2)
+            Product.objects.create(name='手机', price=3999, member_price=3700)
+            Product.objects.create(name='电脑', price=7999, member_price=8000)
+            Product.objects.create(name='耳机', price=399, member_price=299)
+            Product.objects.create(name='矿泉水', price=2, member_price=2)
+            Product.objects.create(name='饼干', price=2, member_price=2)
             Tag.objects.create(name='食品')
             Tag.objects.create(name='电子产品')
 
@@ -79,6 +80,16 @@ class CURDTestCase(TestCase):
         # 查询单条数据
         customer = Customer.objects.values_list('name').first()
         self.assertIsInstance(customer, tuple)
+
+    def test_compare_price(self):
+        """
+        查询会员价大于零售价的商品，可能是大数据杀熟
+        :return:
+        """
+        # F对象，使用查询条件中字段的值，参与比较
+        product_list = Product.objects.filter(member_price__gte=F('price')).all()
+        assert product_list[0].name
+        self.assertEqual(product_list[0].name, '电脑')
 
     def test_many_to_many(self):
         """

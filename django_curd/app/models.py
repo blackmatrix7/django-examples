@@ -12,7 +12,8 @@ class Tag(models.Model):
 class Product(models.Model):
 
     name = models.CharField('商品名称', max_length=24)
-    price = models.DecimalField('价格', max_digits=10, decimal_places=6)
+    price = models.DecimalField('零售价', max_digits=10, decimal_places=6)
+    member_price = models.DecimalField('会员价', max_digits=10, decimal_places=6, null=True, blank=True)
 
 
 class Customer(models.Model):
