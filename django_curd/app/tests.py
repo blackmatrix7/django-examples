@@ -82,14 +82,15 @@ class CURDTestCase(TestCase):
         self.assertIsInstance(customer, tuple)
 
     def test_compare_price(self):
-        """
-        查询会员价大于零售价的商品，可能是大数据杀熟
-        :return:
-        """
         # F对象，使用查询条件中字段的值，参与比较
+        # 查询会员价大于零售价的商品，可能是大数据杀熟
         product_list = Product.objects.filter(member_price__gte=F('price')).all()
         assert product_list[0].name
         self.assertEqual(product_list[0].name, '电脑')
+        # 电脑涨价
+        Product.objects.filter(name='电脑').update(price=F('price')+100)
+        product = Product.objects.get(name='电脑')
+        self.assertEqual(product.price, 8099)
 
     def test_many_to_many(self):
         """
