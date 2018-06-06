@@ -15,11 +15,11 @@ class CURDTestCase(TestCase):
             Customer.objects.create(name='李四', age=72)
             Customer.objects.create(name='王五', age=21)
             Customer.objects.create(name='刘六', age=13)
-            Product.objects.create(name='手机', price=3999, member_price=3700)
-            Product.objects.create(name='电脑', price=7999, member_price=8000)
-            Product.objects.create(name='耳机', price=399, member_price=299)
-            Product.objects.create(name='矿泉水', price=2, member_price=2)
-            Product.objects.create(name='饼干', price=2, member_price=2)
+            Product.objects.create(id=1, name='手机', price=3999, member_price=3700)
+            Product.objects.create(id=2, name='电脑', price=7999, member_price=8000)
+            Product.objects.create(id=3, name='耳机', price=399, member_price=299)
+            Product.objects.create(id=4, name='矿泉水', price=2, member_price=2)
+            Product.objects.create(id=5, name='饼干', price=2, member_price=2)
             Tag.objects.create(name='食品')
             Tag.objects.create(name='电子产品')
 
@@ -89,9 +89,24 @@ class CURDTestCase(TestCase):
         self.assertEqual(product_list[0].name, '电脑')
         # 电脑涨价
         Product.objects.filter(name='电脑').update(price=F('price')+100)
-        # 需要重新取值
+        # 需要重新取值，否则内存中的product价格是旧的
         product = Product.objects.get(name='电脑')
         self.assertEqual(product.price, 8099)
+
+    def test_update_or_create(self):
+        """
+        update_or_create 返回tuple
+        :return:
+        """
+        # update
+        # update_or_create接口kw类型的参数，前面的参数为查询条件，defaults参数接受一个dict，为需要修改的数据
+        # 下面的语句，意思是查询名为"耳机"的商品，如果存在的话，将member_price改为388
+        product = Product.objects.update_or_create(name='耳机', defaults={'member_price': 388})[0]
+        self.assertEqual(product.member_price, 388)
+        self.assertEqual(product.id, 3)  # 耳机id为3，id不变，所以是update
+        # create
+        product = Product.objects.update_or_create(name='电视', defaults={'price': 3999, 'member_price': 2999})[0]
+        self.assertEqual(product.id, 6)  # create, id 应该为6
 
     def test_many_to_many(self):
         """
