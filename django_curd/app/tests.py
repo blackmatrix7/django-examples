@@ -81,7 +81,7 @@ class CURDTestCase(TestCase):
         customer = Customer.objects.values_list('name').first()
         self.assertIsInstance(customer, tuple)
 
-    def test_compare_price(self):
+    def test_f_object(self):
         # F对象，使用查询条件中字段的值，参与比较
         # 查询会员价大于零售价的商品，可能是大数据杀熟
         product_list = Product.objects.filter(member_price__gte=F('price')).all()
