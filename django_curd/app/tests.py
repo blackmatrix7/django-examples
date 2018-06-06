@@ -89,6 +89,7 @@ class CURDTestCase(TestCase):
         self.assertEqual(product_list[0].name, '电脑')
         # 电脑涨价
         Product.objects.filter(name='电脑').update(price=F('price')+100)
+        # 需要重新取值
         product = Product.objects.get(name='电脑')
         self.assertEqual(product.price, 8099)
 
