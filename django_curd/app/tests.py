@@ -108,6 +108,17 @@ class CURDTestCase(TestCase):
         product = Product.objects.update_or_create(name='电视', defaults={'price': 3999, 'member_price': 2999})[0]
         self.assertEqual(product.id, 6)  # create, id 应该为6
 
+    def test_bulk_create(self):
+        """
+        批量新增
+        对比于for循环中save的方式，bulk_create的执行效率更高，因为前者每save一次执行一次insert语句
+        :return:
+        """
+        product_list = [Product(name=name, price=price, member_price=member_price)
+                        for (name, price, member_price) in (('蓝色水笔', 4, 4), ('黑色水笔', 5, 3), ('红色水笔', 5, 2))]
+        Product.objects.bulk_create(product_list, 100)
+        self.assertEqual(Product.objects.filter(name__endswith='水笔').count(), 3)
+
     def test_many_to_many(self):
         """
         测试多对多，没有自己指定关系表
