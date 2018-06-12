@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.db.models import F
 from django.test import TestCase
 from django.db import transaction
@@ -11,15 +12,18 @@ class CURDTestCase(TestCase):
     def setUp(self):
         # 基础数据
         with transaction.atomic():
-            Customer.objects.create(name='张三', age=21)
-            Customer.objects.create(name='李四', age=72)
-            Customer.objects.create(name='王五', age=21)
-            Customer.objects.create(name='刘六', age=13)
-            Product.objects.create(id=1, name='手机', price=3999, member_price=3700)
-            Product.objects.create(id=2, name='电脑', price=7999, member_price=8000)
-            Product.objects.create(id=3, name='耳机', price=399, member_price=299)
-            Product.objects.create(id=4, name='矿泉水', price=2, member_price=2)
-            Product.objects.create(id=5, name='饼干', price=2, member_price=2)
+            default_update_time = datetime(year=2018, month=5, day=1, hour=8, minute=10, second=30)
+            Customer.objects.bulk_create([Customer(name=name, age=age)
+                                          for (name, age) in
+                                          (('张三', 21), ('李四', 72), ('王五', 21), ('刘六', 13))])
+            Product.objects.bulk_create([Product(id=id_, name=name, price=price,
+                                                 member_price=member_price, update_time=update_time)
+                                         for (id_, name, price, member_price, update_time) in
+                                         ((1, '手机', 3999, 3700, default_update_time),
+                                          (2, '电脑', 7999, 8000, default_update_time),
+                                          (3, '耳机', 399, 299, default_update_time),
+                                          (4, '矿泉水', 2, 2, default_update_time),
+                                          (5, '饼干', 2, 2, default_update_time))])
             Tag.objects.create(name='食品')
             Tag.objects.create(name='电子产品')
 
@@ -118,6 +122,28 @@ class CURDTestCase(TestCase):
                         for (name, price, member_price) in (('蓝色水笔', 4, 4), ('黑色水笔', 5, 3), ('红色水笔', 5, 2))]
         Product.objects.bulk_create(product_list, 100)
         self.assertEqual(Product.objects.filter(name__endswith='水笔').count(), 3)
+
+    def test_auto_now(self):
+        """
+        auto_now只对save()方法有效，其他的如query_set.update()是无效的
+        :return:
+        """
+        # 通过save方法是有效的
+        computer = Product.objects.get(name='电脑')
+        computer_update_time = computer.update_time
+        computer.price = 9999
+        computer.save()
+        # 修改前后的update_time不同，说明update_time已更新
+        self.assertNotEqual(computer.update_time, computer_update_time)
+        # 通过update方法就无效了
+        phone = Product.objects.get(name='手机')
+        phone_update_time = phone.update_time
+        Product.objects.filter(name='手机').update(price=6000)
+        phone = Product.objects.get(name='手机')
+        # 修改前后的update_time相同，说明update_time并没有更新
+        self.assertEqual(phone.update_time, phone_update_time)
+        # update时的做法，手动更新update_time
+        Product.objects.filter(name='手机').update(price=6000, update_time=datetime.now())
 
     def test_many_to_many(self):
         """
