@@ -13,19 +13,17 @@ class CURDTestCase(TestCase):
         # 基础数据
         with transaction.atomic():
             default_update_time = datetime(year=2018, month=5, day=1, hour=8, minute=10, second=30)
-            Customer.objects.bulk_create([Customer(name=name, age=age)
-                                          for (name, age) in
-                                          (('张三', 21), ('李四', 72), ('王五', 21), ('刘六', 13))])
-            Product.objects.bulk_create([Product(id=id_, name=name, price=price,
-                                                 member_price=member_price, update_time=update_time)
-                                         for (id_, name, price, member_price, update_time) in
-                                         ((1, '手机', 3999, 3700, default_update_time),
-                                          (2, '电脑', 7999, 8000, default_update_time),
-                                          (3, '耳机', 399, 299, default_update_time),
-                                          (4, '矿泉水', 2, 2, default_update_time),
-                                          (5, '饼干', 2, 2, default_update_time))])
-            Tag.objects.create(name='食品')
-            Tag.objects.create(name='电子产品')
+            Customer.objects.bulk_create(Customer(name=name, age=age) for (name, age) in
+                                         (('张三', 21), ('李四', 72), ('王五', 21), ('刘六', 13)))
+            Product.objects.bulk_create(Product(id=id_, name=name, price=price, member_price=member_price,
+                                                update_time=update_time)
+                                        for (id_, name, price, member_price, update_time) in
+                                        ((1, '手机', 3999, 3700, default_update_time),
+                                         (2, '电脑', 7999, 8000, default_update_time),
+                                         (3, '耳机', 399, 299, default_update_time),
+                                         (4, '矿泉水', 2, 2, default_update_time),
+                                         (5, '饼干', 2, 2, default_update_time)))
+            Tag.objects.bulk_create(Tag(name=name) for (name, ) in (('食品',), ('电子产品',)))
 
     def test_get(self):
         """
