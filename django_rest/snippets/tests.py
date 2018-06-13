@@ -26,7 +26,15 @@ class SnippetsTestCase(TestCase):
         # 反序列化
         stream = BytesIO(content)
         data = JSONParser().parse(stream)
+        # data['linenos'] = True
         self.assertIsNotNone(data)
+        serializer = SnippetSerializer(data=data)
+        # 验证数据
+        serializer.is_valid()
+        self.assertIsNotNone(serializer.validated_data)
+        # obj = serializer.save()
+        # obj.save()
+        # self.assertTrue(Snippet.objects.get(id=1).linenos)
 
     def tearDown(self):
         pass
