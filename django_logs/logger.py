@@ -5,11 +5,13 @@
 # @Site: https://github.com/blackmatrix7
 # @File: logger
 # @Software: PyCharm
-import logging
+import logging.config
+from django.conf import settings
 
 __author__ = 'blackmatrix'
 
 logger = logging.getLogger('django')
+logging.config.dictConfig(settings.LOGGING)
 
 
 if __name__ == '__main__':
