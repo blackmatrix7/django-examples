@@ -5,7 +5,8 @@
 # @Site: https://github.com/blackmatrix7
 # @File: logger
 # @Software: PyCharm
-import logging.config
+import logging
+from logging import config
 from django.conf import settings
 
 __author__ = 'blackmatrix'
