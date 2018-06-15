@@ -1,8 +1,8 @@
 from datetime import datetime
-from django.db.models import F
 from django.test import TestCase
 from django.db import transaction
 from django.core.exceptions import *
+from django.db.models import F, Q, Sum, FloatField
 from .models import Customer, Product, Tag
 
 
@@ -10,19 +10,19 @@ from .models import Customer, Product, Tag
 class CURDTestCase(TestCase):
 
     def setUp(self):
+        default_update_time = datetime(year=2018, month=5, day=1, hour=8, minute=10, second=30)
+        self.product_list = ((1, '手机', 3999, 3700, default_update_time),
+                             (2, '电脑', 7999, 8000, default_update_time),
+                             (3, '耳机', 399, 299, default_update_time),
+                             (4, '矿泉水', 2, 2, default_update_time),
+                             (5, '饼干', 2, 2, default_update_time))
         # 基础数据
         with transaction.atomic():
-            default_update_time = datetime(year=2018, month=5, day=1, hour=8, minute=10, second=30)
             Customer.objects.bulk_create(Customer(name=name, age=age) for (name, age) in
                                          (('张三', 21), ('李四', 72), ('王五', 21), ('刘六', 13)))
             Product.objects.bulk_create(Product(id=id_, name=name, price=price, member_price=member_price,
                                                 update_time=update_time)
-                                        for (id_, name, price, member_price, update_time) in
-                                        ((1, '手机', 3999, 3700, default_update_time),
-                                         (2, '电脑', 7999, 8000, default_update_time),
-                                         (3, '耳机', 399, 299, default_update_time),
-                                         (4, '矿泉水', 2, 2, default_update_time),
-                                         (5, '饼干', 2, 2, default_update_time)))
+                                        for (id_, name, price, member_price, update_time) in self.product_list)
             Tag.objects.bulk_create(Tag(name=name) for (name, ) in (('食品',), ('电子产品',)))
 
     def test_get(self):
@@ -142,6 +142,14 @@ class CURDTestCase(TestCase):
         self.assertEqual(phone.update_time, phone_update_time)
         # update时的做法，手动更新update_time
         Product.objects.filter(name='手机').update(price=6000, update_time=datetime.now())
+
+    def test_sum(self):
+        """
+        output_field 可以设置为Float类型的字段
+        :return:
+        """
+        data = Product.objects.aggregate(price=Sum(F('price'), output_field=FloatField()))
+        self.assertEqual(data['price'], float(sum((item[2] for item in self.product_list))))
 
     def test_many_to_many(self):
         """
