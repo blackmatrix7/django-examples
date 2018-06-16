@@ -3,7 +3,7 @@ from datetime import datetime
 from django.test import TestCase
 from django.db import transaction
 from django.core.exceptions import *
-from django.db.models import DecimalField, F, Q, Sum, Max, Min, Avg
+from django.db.models import DecimalField, F, Q, Sum, Max, Min, Avg, Count
 from .models import Customer, Product, Tag
 
 
@@ -11,12 +11,13 @@ from .models import Customer, Product, Tag
 class CURDTestCase(TestCase):
 
     def setUp(self):
-        default_update_time = datetime(year=2018, month=5, day=1, hour=8, minute=10, second=30)
-        self.product_list = ((1, '手机', 3999, 3700, default_update_time),
-                             (2, '电脑', 7999, 8000, default_update_time),
-                             (3, '耳机', 399, 299, default_update_time),
-                             (4, '矿泉水', 1, 1, default_update_time),
-                             (5, '饼干', 2, 2, default_update_time))
+        self.default_update_time = datetime(year=2018, month=5, day=1, hour=8, minute=10, second=30)
+        self.product_list = ((1, '手机', 3999, 3700, self.default_update_time),
+                             (2, '电脑', 7999, 8000, self.default_update_time),
+                             (3, '耳机', 399, 299, self.default_update_time),
+                             (4, '矿泉水', 1, 1, self.default_update_time),
+                             (5, '饼干', 2, 2, self.default_update_time),
+                             (6, '矿泉水', 2, 2, self.default_update_time))
         # 基础数据
         with transaction.atomic():
             Customer.objects.bulk_create(Customer(name=name, age=age) for (name, age) in
@@ -109,7 +110,7 @@ class CURDTestCase(TestCase):
         self.assertEqual(product.id, 3)  # 耳机id为3，id不变，所以是update
         # create
         product = Product.objects.update_or_create(name='电视', defaults={'price': 3999, 'member_price': 2999})[0]
-        self.assertEqual(product.id, 6)  # create, id 应该为6
+        self.assertEqual(product.id, len(self.product_list) + 1)  # create, id 应该自增
 
     def test_bulk_create(self):
         """
@@ -144,13 +145,35 @@ class CURDTestCase(TestCase):
         # update时的做法，手动更新update_time
         Product.objects.filter(name='手机').update(price=6000, update_time=datetime.now())
 
+    def test_defer(self):
+        """
+        defer
+        :return:
+        """
+        prodcut_list = Product.objects.defer('update_time').all()
+        # 查询语句中没有查询 update_time 字段
+        self.assertNotIn('update_time', str(prodcut_list.query))
+        # defer仍会返回QuerySet对象，defer里字段的值，会延迟查询，直到主动访问这个字段
+        # 就是说 prodcut_list 这个 QuerySet，对于defer中的update_time字段，是延迟查询的
+        # 但是，如果主动去访问这个字段，仍然会查询出update_time的值
+        for product in prodcut_list:
+            # 主动去访问update_time字段的值，仍会查询
+            self.assertIsNotNone(product.update_time)
+        # 多次调用defer的时，每次调用defer时排除的字段，都会生效
+        prodcut_list = Product.objects.defer('update_time').defer('member_price').all()
+        # 查询语句中没有查询 update_time 字段
+        self.assertNotIn('update_time', str(prodcut_list.query))
+        # 查询语句中没有查询 member_price 字段
+        self.assertNotIn('member_price', str(prodcut_list.query))
+
+
     def test_aggregate(self):
         """
         Django 聚合函数
         :return:
         """
         # output_field 可以设置输出的字段类型
-        # Sum，
+        # Sum
         data = Product.objects.aggregate(price=Sum(F('price'), output_field=DecimalField()))
         self.assertEqual(data['price'], Decimal(sum((item[2] for item in self.product_list))))
         # Max
@@ -162,6 +185,10 @@ class CURDTestCase(TestCase):
         # Avg
         data = Product.objects.aggregate(price=Avg(F('price'), output_field=DecimalField()))
         self.assertEqual(data['price'], Decimal(sum((item[2] for item in self.product_list)) / len(self.product_list)))
+        # Count
+        # Count还有个参数为distinct，默认为False，当为True时，只统计不重复的数据
+        data = Product.objects.aggregate(count=Count(F('price')))
+        self.assertEqual(data['count'], len(self.product_list))
 
     def test_many_to_many(self):
         """
