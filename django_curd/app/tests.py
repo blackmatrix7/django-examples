@@ -1,8 +1,9 @@
+from decimal import Decimal
 from datetime import datetime
 from django.test import TestCase
 from django.db import transaction
 from django.core.exceptions import *
-from django.db.models import F, Q, Sum, FloatField
+from django.db.models import F, Q, Sum, Max, Min, DecimalField
 from .models import Customer, Product, Tag
 
 
@@ -143,13 +144,21 @@ class CURDTestCase(TestCase):
         # update时的做法，手动更新update_time
         Product.objects.filter(name='手机').update(price=6000, update_time=datetime.now())
 
-    def test_sum(self):
+    def test_aggregate(self):
         """
-        output_field 可以设置为Float类型的字段
+        Django 聚合函数
         :return:
         """
-        data = Product.objects.aggregate(price=Sum(F('price'), output_field=FloatField()))
-        self.assertEqual(data['price'], float(sum((item[2] for item in self.product_list))))
+        # output_field 可以设置输出的字段类型
+        # Sum，
+        data = Product.objects.aggregate(price=Sum(F('price'), output_field=DecimalField()))
+        self.assertEqual(data['price'], Decimal(sum((item[2] for item in self.product_list))))
+        # Max
+        data = Product.objects.aggregate(price=Max(F('price'), output_field=DecimalField()))
+        self.assertEqual(data['price'], Decimal(max((item[2] for item in self.product_list))))
+        # Min
+        data = Product.objects.aggregate(price=Min(F('price'), output_field=DecimalField()))
+        self.assertEqual(data['price'], Decimal(min((item[2] for item in self.product_list))))
 
     def test_many_to_many(self):
         """
