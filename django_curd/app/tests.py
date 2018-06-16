@@ -3,7 +3,7 @@ from datetime import datetime
 from django.test import TestCase
 from django.db import transaction
 from django.core.exceptions import *
-from django.db.models import F, Q, Sum, Max, Min, DecimalField
+from django.db.models import DecimalField, F, Q, Sum, Max, Min, Avg
 from .models import Customer, Product, Tag
 
 
@@ -15,7 +15,7 @@ class CURDTestCase(TestCase):
         self.product_list = ((1, '手机', 3999, 3700, default_update_time),
                              (2, '电脑', 7999, 8000, default_update_time),
                              (3, '耳机', 399, 299, default_update_time),
-                             (4, '矿泉水', 2, 2, default_update_time),
+                             (4, '矿泉水', 1, 1, default_update_time),
                              (5, '饼干', 2, 2, default_update_time))
         # 基础数据
         with transaction.atomic():
@@ -159,6 +159,9 @@ class CURDTestCase(TestCase):
         # Min
         data = Product.objects.aggregate(price=Min(F('price'), output_field=DecimalField()))
         self.assertEqual(data['price'], Decimal(min((item[2] for item in self.product_list))))
+        # Avg
+        data = Product.objects.aggregate(price=Avg(F('price'), output_field=DecimalField()))
+        self.assertEqual(data['price'], Decimal(sum((item[2] for item in self.product_list)) / len(self.product_list)))
 
     def test_many_to_many(self):
         """
