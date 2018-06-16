@@ -165,7 +165,10 @@ class CURDTestCase(TestCase):
         self.assertNotIn('update_time', str(prodcut_list.query))
         # 查询语句中没有查询 member_price 字段
         self.assertNotIn('member_price', str(prodcut_list.query))
-
+        # 不能defer主键
+        prodcut_list = Product.objects.defer('id').all()
+        # 查询语句中存在 id 字段
+        self.assertIn('id', str(prodcut_list.query))
 
     def test_aggregate(self):
         """
