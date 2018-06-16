@@ -169,6 +169,23 @@ class CURDTestCase(TestCase):
         prodcut_list = Product.objects.defer('id').all()
         # 查询语句中存在 id 字段
         self.assertIn('id', str(prodcut_list.query))
+        # 如果不希望每次都使用defer，可以创建同名的model，只要将managed设置为False即可
+        from django.db import models
+
+        class ProductNoUpdateTime(models.Model):
+
+            name = models.CharField('商品名称', max_length=24)
+            price = models.DecimalField('零售价', max_digits=10, decimal_places=6)
+            member_price = models.DecimalField('会员价', max_digits=10, decimal_places=6, null=True, blank=True)
+
+            class Meta:
+                managed = False
+                db_table = 'product'
+        # 不能defer主键
+        prodcut_no_updatetime_list = ProductNoUpdateTime.objects.all()
+        prodcut_list = Product.objects.defer('update_time').all()
+        # 两个查询语句是等同的
+        self.assertEqual(str(prodcut_list.query), str(prodcut_no_updatetime_list.query))
 
     def test_aggregate(self):
         """
