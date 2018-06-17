@@ -187,6 +187,32 @@ class CURDTestCase(TestCase):
         # 两个查询语句是等同的
         self.assertEqual(str(prodcut_list.query), str(prodcut_no_updatetime_list.query))
 
+    def test_only(self):
+        """
+        only和defer的相似
+        :return:
+        """
+        # only 只查询某些字段
+        prodcut_list = Product.objects.only('name').all()
+        # 只查询name时，不会查询update_time
+        self.assertNotIn('update_time', str(prodcut_list.query))
+        # 即使只查询name，主键也是会强制查询的
+        self.assertIn('id', str(prodcut_list.query))
+        # 多次调用only，只有最后一次调用有效
+        prodcut_list = Product.objects.only('name').only('price').all()
+        self.assertIn('price', str(prodcut_list.query))
+        self.assertNotIn('name', str(prodcut_list.query))
+        # only和defer同时调用
+        # only在前，defer在后，查询的字段为二者的差集
+        prodcut_list = Product.objects.only('name', 'price').defer('price').all()
+        self.assertIn('name', str(prodcut_list.query))
+        self.assertNotIn('price', str(prodcut_list.query))
+        # defer在前，only在后，查询的字段为二者的差集
+        prodcut_list = Product.objects.defer('price').only('name', 'price').all()
+        a = str(prodcut_list.query)
+        self.assertIn('name', str(prodcut_list.query))
+        self.assertNotIn('price', str(prodcut_list.query))
+
     def test_aggregate(self):
         """
         Django 聚合函数
