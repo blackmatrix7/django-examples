@@ -207,11 +207,18 @@ class CURDTestCase(TestCase):
         prodcut_list = Product.objects.only('name', 'price').defer('price').all()
         self.assertIn('name', str(prodcut_list.query))
         self.assertNotIn('price', str(prodcut_list.query))
+        # 差集查询的字段为空时，则查询全部字段
+        prodcut_list = Product.objects.only('price').defer('name', 'price').all()
+        self.assertIn('name', str(prodcut_list.query))
+        self.assertIn('price', str(prodcut_list.query))
         # defer在前，only在后，查询的字段为二者的差集
         prodcut_list = Product.objects.defer('price').only('name', 'price').all()
-        a = str(prodcut_list.query)
         self.assertIn('name', str(prodcut_list.query))
         self.assertNotIn('price', str(prodcut_list.query))
+        # 差集查询的字段为空时，则查询全部字段
+        prodcut_list = Product.objects.defer('name', 'price').only('price').all()
+        self.assertIn('name', str(prodcut_list.query))
+        self.assertIn('price', str(prodcut_list.query))
 
     def test_aggregate(self):
         """
