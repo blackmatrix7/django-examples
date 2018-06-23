@@ -18,10 +18,14 @@ class CURDTestCase(TestCase):
                              (4, '矿泉水', 1, 1, self.default_update_time),
                              (5, '饼干', 2, 2, self.default_update_time),
                              (6, '矿泉水', 2, 2, self.default_update_time))
+        self.customer_list = ((1, '王一', 21),
+                              (2, '周二', 72),
+                              (3, '张三', 21),
+                              (4, '李四', 13))
         # 基础数据
         with transaction.atomic():
-            Customer.objects.bulk_create(Customer(name=name, age=age) for (name, age) in
-                                         (('张三', 21), ('李四', 72), ('王五', 21), ('刘六', 13)))
+            Customer.objects.bulk_create(Customer(id=id_, name=name, age=age)
+                                         for (id_, name, age) in self.customer_list)
             Product.objects.bulk_create(Product(id=id_, name=name, price=price, member_price=member_price,
                                                 update_time=update_time)
                                         for (id_, name, price, member_price, update_time) in self.product_list)
@@ -34,7 +38,7 @@ class CURDTestCase(TestCase):
         """
         # 获取唯一的对象
         customer = Customer.objects.get(id=1)
-        self.assertEqual(customer.name, '张三')
+        self.assertEqual(customer.name, '王一')
         # 如果对象不唯一则抛出MultipleObjectsReturned异常
         with self.assertRaises(MultipleObjectsReturned):
             Customer.objects.get(age=21)
@@ -51,6 +55,10 @@ class CURDTestCase(TestCase):
         customer, create = Customer.objects.get_or_create(name='郭七', age=56)
         self.assertEqual(customer.name, '郭七')
 
+    def test_update_or_create(self):
+        customer, create = Customer.objects.get_or_create(name='赵九', age=34)
+        self.assertEqual(customer.name, '郭七')
+
     def test_order_by(self):
         """
         排序
@@ -58,10 +66,10 @@ class CURDTestCase(TestCase):
         """
         # 升序
         customers = Customer.objects.order_by('age').first()
-        self.assertEqual(customers.name, '刘六')
+        self.assertEqual(customers.name, '李四')
         # 降序
         customers = Customer.objects.order_by('-age').first()
-        self.assertEqual(customers.name, '李四')
+        self.assertEqual(customers.name, '周二')
 
     def test_filter_exculde(self):
         """
@@ -70,7 +78,7 @@ class CURDTestCase(TestCase):
         """
         # 查询age为21，而name不为张三的
         customer = Customer.objects.filter(age=21).exclude(name='张三').order_by('id').first()
-        self.assertEqual(customer.name, '王五')
+        self.assertEqual(customer.name, '王一')
 
     def test_return_list(self):
         # 返回QuertSet，每个元素都是tuple
@@ -242,6 +250,14 @@ class CURDTestCase(TestCase):
         # Count还有个参数为distinct，默认为False，当为True时，只统计不重复的数据
         data = Product.objects.aggregate(count=Count(F('price')))
         self.assertEqual(data['count'], len(self.product_list))
+
+    def test_select_for_update(self):
+        """
+        SQLite下无效， 需要mysql
+        :return:
+        """
+        # TODO 待补充完成
+        pass
 
     def test_many_to_many(self):
         """
