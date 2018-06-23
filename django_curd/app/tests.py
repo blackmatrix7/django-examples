@@ -52,12 +52,25 @@ class CURDTestCase(TestCase):
         :return:
         """
         # 查询或创建对象，返回一个元组，第一个元素为查询或创建的对象，第二个为是否新建的对象
-        customer, create = Customer.objects.get_or_create(name='郭七', age=56)
+        customer, created = Customer.objects.get_or_create(name='郭七', age=56)
         self.assertEqual(customer.name, '郭七')
 
     def test_update_or_create(self):
-        customer, create = Customer.objects.get_or_create(name='赵九', age=34)
-        self.assertEqual(customer.name, '郭七')
+        """
+        update_or_create 返回tuple
+        :return:
+        """
+        # update 更新或创建对象，返回一个元组，第一个元素为查询或创建的对象，第二个为是否新建的对象
+        # update_or_create接口kw类型的参数，前面的参数为查询条件，defaults参数接受一个dict，为需要修改的数据
+        # 下面的语句，意思是查询名为"耳机"的商品，如果存在的话，将member_price改为388
+        product, created = Product.objects.update_or_create(name='耳机', defaults={'member_price': 388})
+        self.assertFalse(created)  # 没有创建新的数据，所以created为False
+        self.assertEqual(product.member_price, 388)
+        self.assertEqual(product.id, 3)  # 耳机id为3，id不变，所以是update
+        # create
+        product, created = Product.objects.update_or_create(name='电视', defaults={'price': 3999, 'member_price': 2999})
+        self.assertTrue(created)  # 创建新的数据，所以created为True
+        self.assertEqual(product.id, len(self.product_list) + 1)  # create, id 应该自增
 
     def test_order_by(self):
         """
@@ -104,21 +117,6 @@ class CURDTestCase(TestCase):
         # 需要重新取值，否则内存中的product价格是旧的
         product = Product.objects.get(name='电脑')
         self.assertEqual(product.price, 8099)
-
-    def test_update_or_create(self):
-        """
-        update_or_create 返回tuple
-        :return:
-        """
-        # update
-        # update_or_create接口kw类型的参数，前面的参数为查询条件，defaults参数接受一个dict，为需要修改的数据
-        # 下面的语句，意思是查询名为"耳机"的商品，如果存在的话，将member_price改为388
-        product = Product.objects.update_or_create(name='耳机', defaults={'member_price': 388})[0]
-        self.assertEqual(product.member_price, 388)
-        self.assertEqual(product.id, 3)  # 耳机id为3，id不变，所以是update
-        # create
-        product = Product.objects.update_or_create(name='电视', defaults={'price': 3999, 'member_price': 2999})[0]
-        self.assertEqual(product.id, len(self.product_list) + 1)  # create, id 应该自增
 
     def test_bulk_create(self):
         """
