@@ -18,10 +18,10 @@ class CURDTestCase(TestCase):
                              (4, '矿泉水', 1, 1, self.default_update_time),
                              (5, '饼干', 2, 2, self.default_update_time),
                              (6, '矿泉水', 2, 2, self.default_update_time))
-        self.customer_list = ((1, '王一', 21, 15689776542),
-                              (2, '周二', 72, 13034451353),
-                              (3, '张三', 21, 13248642709),
-                              (4, '李四', 13, 13252034306))
+        self.customer_list = ((1, '王一', 21, '15689776542'),
+                              (2, '周二', 72, '13034451353'),
+                              (3, '张三', 21, '13248642709'),
+                              (4, '李四', 13, '13252034306'))
         # 基础数据
         with transaction.atomic():
             Customer.objects.bulk_create(Customer(id=id_, name=name, age=age, phone=phone)
@@ -239,7 +239,10 @@ class CURDTestCase(TestCase):
         for index, (*_, product) in enumerate(product_list.items(), 1):
             self.assertEqual(index, product.id)
         # field_name传入不重复的字段，也可以根据field_name查询
-
+        phone_list = [(phone for (*_, phone) in self.customer_list)]
+        customer_list = Customer.objects.in_bulk(phone_list, field_name='phone')
+        for index, customer in enumerate(customer_list):
+            self.assertEqual(phone_list[index], customer.phone)
 
     def test_aggregate(self):
         """
