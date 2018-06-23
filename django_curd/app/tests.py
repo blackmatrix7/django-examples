@@ -226,6 +226,20 @@ class CURDTestCase(TestCase):
         self.assertIn('name', str(prodcut_list.query))
         self.assertIn('price', str(prodcut_list.query))
 
+    def test_bulk(self):
+        """
+        根据主键或不允许重复的字段快速查询数据
+        :return:
+        """
+        # in_bulk 接受id_list和field_name两个参数
+        # field_name 默认参数为pk，即使用主键进行查询
+        # 下面的查询语句中，查询的是主键id为1、2、3、4的数据
+        product_list = Product.objects.in_bulk([1, 2, 3, 4])
+        # 检验通过
+        for index, (*_, product) in enumerate(product_list.items(), 1):
+            self.assertEqual(index, product.id)
+        # field_name传入不重复的字段，也可以根据field_name查询
+
     def test_aggregate(self):
         """
         Django 聚合函数
