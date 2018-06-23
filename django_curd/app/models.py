@@ -31,6 +31,7 @@ class Customer(models.Model):
     name = models.CharField('姓名', max_length=24)
     age = models.IntegerField('年龄')
     products = models.ManyToManyField(Product, through='Shopping', through_fields=('customer', 'product'))
+    phone = models.CharField('手机', max_length=11, unique=True)
 
     def __str__(self):
         return self.name
