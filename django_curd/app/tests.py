@@ -90,6 +90,7 @@ class CURDTestCase(TestCase):
     def test_update(self):
         """
         对queryset查询出来的数据进行update
+        update是数据库级别的操作， 不会触发save()
         :return:
         """
         # 例如，对售价大于10元的商品，涨价1元
@@ -101,7 +102,7 @@ class CURDTestCase(TestCase):
 
         # 更新某个数据时，应该使用update()，而不是将model查询出来，修改后再save()
         # 前者可以避免竞态条件，后者有可能在取出数据，至重新save()期间，数据被修改
-        # 避免下面的操作
+        # 避免下面的操作，除非save()方法有一些自定义逻辑，比如会员价会自动根据零售价打折
         # product = Product.objects.get(id=1)
         # product.price += 10
         # product.save()
@@ -118,6 +119,14 @@ class CURDTestCase(TestCase):
             # django.core.exceptions.FieldDoesNotExist: Tag has no field named 'product__price'
             Tag.objects.filter(name='食品').update(product__price=0)
         # TODO 正确的做法
+
+    def test_delete(self):
+        """
+        对queryset的查询结果进行delete
+        :return:
+        """
+        # TODO 写累了，下次补充，加个todo免得忘了
+        pass
 
     def test_update_or_create(self):
         """
