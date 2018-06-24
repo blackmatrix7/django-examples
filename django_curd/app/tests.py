@@ -99,6 +99,26 @@ class CURDTestCase(TestCase):
         old_price = [product for product in self.product_list if product[0] == 1][0][2]
         self.assertEqual(Decimal(old_price + 1), Product.objects.get(id=1).price)
 
+        # 更新某个数据时，应该使用update()，而不是将model查询出来，修改后再save()
+        # 前者可以避免竞态条件，后者有可能在取出数据，至重新save()期间，数据被修改
+        # 避免下面的操作
+        # product = Product.objects.get(id=1)
+        # product.price += 10
+        # product.save()
+
+        # 对Queryset进行切片时，无法使用update
+        with self.assertRaises(AssertionError):
+            # AssertionError: Cannot update a query once a slice has been taken.
+            Product.objects.filter(price__gte=10)[1: 2].update(price=F('price')+1)
+
+        # update只能更新model自身的字段，而不能更新关联的model的字段
+        # 例如 Tag model关联了Product Model，通过 Tag model去更新Product的字段是不可行的
+        # 假设需求是食品通通免费啦
+        with self.assertRaises(FieldDoesNotExist):
+            # django.core.exceptions.FieldDoesNotExist: Tag has no field named 'product__price'
+            Tag.objects.filter(name='食品').update(product__price=0)
+        # TODO 正确的做法
+
     def test_update_or_create(self):
         """
         update_or_create 返回tuple
