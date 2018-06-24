@@ -1,3 +1,4 @@
+import decimal
 from decimal import Decimal
 from datetime import datetime
 from django.test import TestCase
@@ -11,6 +12,8 @@ from .models import Customer, Product, Tag
 class CURDTestCase(TestCase):
 
     def setUp(self):
+        # 统一精度
+        decimal.getcontext().prec = 28
         self.default_update_time = datetime(year=2018, month=5, day=1, hour=8, minute=10, second=30)
         self.product_list = ((1, '手机', 3999, 3700, self.default_update_time),
                              (2, '电脑', 7999, 8000, self.default_update_time),
@@ -54,6 +57,47 @@ class CURDTestCase(TestCase):
         # 查询或创建对象，返回一个元组，第一个元素为查询或创建的对象，第二个为是否新建的对象
         customer, created = Customer.objects.get_or_create(name='郭七', age=56)
         self.assertEqual(customer.name, '郭七')
+
+    def test_bulk(self):
+        """
+        根据主键或不允许重复的字段快速查询数据
+        :return:
+        """
+        # in_bulk 接受id_list和field_name两个参数
+        # field_name 默认参数为pk，即使用主键进行查询
+        # 下面的查询语句中，查询的是主键id为1、2、3、4的数据
+        product_list = Product.objects.in_bulk([1, 2, 3, 4])
+        # 检验通过
+        for index, (*_, product) in enumerate(product_list.items(), 1):
+            self.assertEqual(index, product.id)
+        # field_name传入不重复的字段，也可以根据field_name查询
+        phone_list = [(phone for (*_, phone) in self.customer_list)]
+        customer_list = Customer.objects.in_bulk(phone_list, field_name='phone')
+        for index, customer in enumerate(customer_list):
+            self.assertEqual(phone_list[index], customer.phone)
+
+    def test_bulk_create(self):
+        """
+        批量新增
+        对比于for循环中save的方式，bulk_create的执行效率更高，因为前者每save一次执行一次insert语句
+        :return:
+        """
+        product_list = [Product(name=name, price=price, member_price=member_price)
+                        for (name, price, member_price) in (('蓝色水笔', 4, 4), ('黑色水笔', 5, 3), ('红色水笔', 5, 2))]
+        Product.objects.bulk_create(product_list, 100)
+        self.assertEqual(Product.objects.filter(name__endswith='水笔').count(), 3)
+
+    def test_update(self):
+        """
+        对queryset查询出来的数据进行update
+        :return:
+        """
+        # 例如，对售价大于10元的商品，涨价1元
+        affected = Product.objects.filter(price__gte=10).update(price=F('price')+1)
+        self.assertTrue(affected > 0)
+        # 初始化数据中，id为1的商品，初始的金额
+        old_price = [product for product in self.product_list if product[0] == 1][0][2]
+        self.assertEqual(Decimal(old_price + 1), Product.objects.get(id=1).price)
 
     def test_update_or_create(self):
         """
@@ -117,17 +161,6 @@ class CURDTestCase(TestCase):
         # 需要重新取值，否则内存中的product价格是旧的
         product = Product.objects.get(name='电脑')
         self.assertEqual(product.price, 8099)
-
-    def test_bulk_create(self):
-        """
-        批量新增
-        对比于for循环中save的方式，bulk_create的执行效率更高，因为前者每save一次执行一次insert语句
-        :return:
-        """
-        product_list = [Product(name=name, price=price, member_price=member_price)
-                        for (name, price, member_price) in (('蓝色水笔', 4, 4), ('黑色水笔', 5, 3), ('红色水笔', 5, 2))]
-        Product.objects.bulk_create(product_list, 100)
-        self.assertEqual(Product.objects.filter(name__endswith='水笔').count(), 3)
 
     def test_auto_now(self):
         """
@@ -248,24 +281,6 @@ class CURDTestCase(TestCase):
         prodcut_list = Product.objects.defer('name', 'price').only('price').all()
         self.assertIn('name', str(prodcut_list.query))
         self.assertIn('price', str(prodcut_list.query))
-
-    def test_bulk(self):
-        """
-        根据主键或不允许重复的字段快速查询数据
-        :return:
-        """
-        # in_bulk 接受id_list和field_name两个参数
-        # field_name 默认参数为pk，即使用主键进行查询
-        # 下面的查询语句中，查询的是主键id为1、2、3、4的数据
-        product_list = Product.objects.in_bulk([1, 2, 3, 4])
-        # 检验通过
-        for index, (*_, product) in enumerate(product_list.items(), 1):
-            self.assertEqual(index, product.id)
-        # field_name传入不重复的字段，也可以根据field_name查询
-        phone_list = [(phone for (*_, phone) in self.customer_list)]
-        customer_list = Customer.objects.in_bulk(phone_list, field_name='phone')
-        for index, customer in enumerate(customer_list):
-            self.assertEqual(phone_list[index], customer.phone)
 
     def test_aggregate(self):
         """
