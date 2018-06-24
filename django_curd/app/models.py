@@ -18,8 +18,8 @@ class Product(models.Model):
         db_table = 'product'
 
     name = models.CharField('商品名称', max_length=24)
-    price = models.DecimalField('零售价', max_digits=10, decimal_places=6)
-    member_price = models.DecimalField('会员价', max_digits=10, decimal_places=6, null=True, blank=True)
+    price = models.DecimalField('零售价', max_digits=40, decimal_places=28)
+    member_price = models.DecimalField('会员价', max_digits=40, decimal_places=28, null=True, blank=True)
     update_time = models.DateTimeField('更新时间', auto_now=True, null=True, blank=True)
 
 
