@@ -151,6 +151,30 @@ class CURDTestCase(TestCase):
         # update时的做法，手动更新update_time
         Product.objects.filter(name='手机').update(price=6000, update_time=datetime.now())
 
+    def text_exists(self):
+        """
+        检查数据是否存在
+        :return:
+        """
+        """
+        exists 函数用于检查queryset的数据是否存在
+        queryset是惰性查询的，当django返回queryset时，其实并没有在数据库中进行任何操作
+        只有当访问访问queryset时，才会将queryset查询的内容加载到内存中
+        如使用if语句，或对queryset进行迭代时，都会触发queryset进行查询
+        在大数据量的查询中，一次性将这些数据加载到内存中，可能导致内存溢出
+        所以当只是想判断数据是否存在时，可以使用exists函数
+        """
+        # 假设查询李四是否在成年的客户中
+        # 第一种方法
+        lisi = Customer.objects.get(name='李四')
+        cutomer_list = Customer.objects.filter(age__gte=18)
+        # 在assertNotIn时，需要执行cutomer_list的queryset，将所有的对象加载到内存中，再进行判断
+        self.assertNotIn(lisi, cutomer_list)
+        # 第二种方法
+        self.assertFalse(Customer.objects.filter(age__gte=18).exists(name='李四'))
+        self.assertTrue(Customer.objects.filter(age__gte=18).exists(name='王一'))
+        # 第二种方法性能好于第一种
+
     def test_defer(self):
         """
         defer
@@ -171,7 +195,7 @@ class CURDTestCase(TestCase):
         self.assertNotIn('update_time', str(prodcut_list.query))
         # 查询语句中没有查询 member_price 字段
         self.assertNotIn('member_price', str(prodcut_list.query))
-        # 不能defer主键
+        # 不能defer主键，或者说defer也没用
         prodcut_list = Product.objects.defer('id').all()
         # 查询语句中存在 id 字段
         self.assertIn('id', str(prodcut_list.query))
@@ -187,10 +211,9 @@ class CURDTestCase(TestCase):
             class Meta:
                 managed = False
                 db_table = 'product'
-        # 不能defer主键
+        # 两个查询语句是等同的
         prodcut_no_updatetime_list = ProductNoUpdateTime.objects.all()
         prodcut_list = Product.objects.defer('update_time').all()
-        # 两个查询语句是等同的
         self.assertEqual(str(prodcut_list.query), str(prodcut_no_updatetime_list.query))
 
     def test_only(self):
