@@ -84,9 +84,16 @@ mkdir logs
 
 ### 新增django_logs/logger.py
 
+注意保证logger.py在启动时会被加载，以运行logging模块从dictConfig读取配置的代码。
+
 ```python
-import logging
+
+import logging.config
+from django.conf import settings
+
 logger = logging.getLogger('django')
+# logging模块从dictConfig中读取配置，这样logging.info('xxx')也可以直接输出日志
+logging.config.dictConfig(settings.LOGGING)
 ```
 
 ## 验证
