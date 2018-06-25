@@ -136,13 +136,10 @@ class CURDTestCase(TestCase):
             # django.core.exceptions.FieldDoesNotExist: Tag has no field named 'product__price'
             Tag.objects.filter(name='食品').update(product__price=0)
         # 正确的做法
-        item_list = Product.objects.all()
-        for item in item_list:
-            assert item
-        Product.tags.object.filter(name='食品').update(price=0)
+        Product.objects.filter(tags__name='食品').update(price=0)
         phone = Product.objects.filter(name='手机').first()
         self.assertTrue(phone.price > 0)
-        cookie = Product.objects.filter(tag__name='食品', name='饼干').first()
+        cookie = Product.objects.filter(tags__name='食品', name='饼干').first()
         self.assertTrue(cookie.price == 0)
 
     def test_delete(self):
