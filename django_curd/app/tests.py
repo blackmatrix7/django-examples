@@ -14,25 +14,40 @@ class CURDTestCase(TestCase):
     def setUp(self):
         # 统一精度
         decimal.getcontext().prec = 28
-        self.default_update_time = datetime(year=2018, month=5, day=1, hour=8, minute=10, second=30)
-        self.product_list = ((1, '手机', 3999, 3700, self.default_update_time),
-                             (2, '电脑', 7999, 8000, self.default_update_time),
-                             (3, '耳机', 399, 299, self.default_update_time),
-                             (4, '矿泉水', 1, 1, self.default_update_time),
-                             (5, '饼干', 2, 2, self.default_update_time),
-                             (6, '矿泉水', 2, 2, self.default_update_time))
-        self.customer_list = ((1, '王一', 21, '15689776542'),
-                              (2, '周二', 72, '13034451353'),
-                              (3, '张三', 21, '13248642709'),
-                              (4, '李四', 13, '13252034306'))
         # 基础数据
         with transaction.atomic():
+            self.default_update_time = datetime(year=2018, month=5, day=1, hour=8, minute=10, second=30)
+
+            self.tag_list = ((1, '电子产品',),
+                             (2, '食品',))
+
+            self.product_list = ((1, '手机', 3999, 3700, self.default_update_time),
+                                 (2, '电脑', 7999, 8000, self.default_update_time),
+                                 (3, '耳机', 399, 299, self.default_update_time),
+                                 (4, '矿泉水', 1, 1, self.default_update_time),
+                                 (5, '饼干', 2, 2, self.default_update_time),
+                                 (6, '矿泉水', 2, 2, self.default_update_time))
+
+            self.customer_list = ((1, '王一', 21, '15689776542'),
+                                  (2, '周二', 72, '13034451353'),
+                                  (3, '张三', 21, '13248642709'),
+                                  (4, '李四', 13, '13252034306'))
+
+            # 商品标签数据
+            digital, food, *_ = Tag.objects.bulk_create(Tag(id=id_, name=name) for (id_, name, ) in self.tag_list)
+            # 商品数据
+            products = Product.objects.bulk_create(Product(id=id_, name=name, price=price, member_price=member_price,
+                                                           update_time=update_time)
+                                                   for (id_, name, price, member_price, update_time) in self.product_list)
+            # 客户数据
             Customer.objects.bulk_create(Customer(id=id_, name=name, age=age, phone=phone)
                                          for (id_, name, age, phone) in self.customer_list)
-            Product.objects.bulk_create(Product(id=id_, name=name, price=price, member_price=member_price,
-                                                update_time=update_time)
-                                        for (id_, name, price, member_price, update_time) in self.product_list)
-            Tag.objects.bulk_create(Tag(name=name) for (name, ) in (('食品',), ('电子产品',)))
+            # 更新商品标签
+            for product in products:
+                if product.name in ('手机', '电脑', '耳机'):
+                    product.tags.add(digital)
+                else:
+                    product.tags.add(food)
 
     def test_get(self):
         """
@@ -84,7 +99,9 @@ class CURDTestCase(TestCase):
         """
         product_list = [Product(name=name, price=price, member_price=member_price)
                         for (name, price, member_price) in (('蓝色水笔', 4, 4), ('黑色水笔', 5, 3), ('红色水笔', 5, 2))]
-        Product.objects.bulk_create(product_list, 100)
+        # bulk_create 返回list，list内是创建的model
+        create_list = Product.objects.bulk_create(product_list, 100)
+        self.assertIsNotNone(create_list)
         self.assertEqual(Product.objects.filter(name__endswith='水笔').count(), 3)
 
     def test_update(self):
@@ -118,7 +135,15 @@ class CURDTestCase(TestCase):
         with self.assertRaises(FieldDoesNotExist):
             # django.core.exceptions.FieldDoesNotExist: Tag has no field named 'product__price'
             Tag.objects.filter(name='食品').update(product__price=0)
-        # TODO 正确的做法
+        # 正确的做法
+        item_list = Product.objects.all()
+        for item in item_list:
+            assert item
+        Product.tags.object.filter(name='食品').update(price=0)
+        phone = Product.objects.filter(name='手机').first()
+        self.assertTrue(phone.price > 0)
+        cookie = Product.objects.filter(tag__name='食品', name='饼干').first()
+        self.assertTrue(cookie.price == 0)
 
     def test_delete(self):
         """
