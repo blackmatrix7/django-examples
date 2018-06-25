@@ -9,7 +9,6 @@ class Tag(models.Model):
         db_table = 'tag'
 
     name = models.CharField('标签', max_length=24)
-    products = models.ManyToManyField('Product')
 
 
 class Product(models.Model):
@@ -21,6 +20,7 @@ class Product(models.Model):
     price = models.DecimalField('零售价', max_digits=40, decimal_places=28)
     member_price = models.DecimalField('会员价', max_digits=40, decimal_places=28, null=True, blank=True)
     update_time = models.DateTimeField('更新时间', auto_now=True, null=True, blank=True)
+    tags = models.ManyToManyField('Tag')
 
 
 class Customer(models.Model):
