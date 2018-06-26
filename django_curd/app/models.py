@@ -11,6 +11,15 @@ class Tag(models.Model):
     name = models.CharField('标签', max_length=24)
 
 
+class Supplier(models.Model):
+
+    class Meta:
+        db_table = 'supplier'
+
+    name = models.CharField('供应商', max_length=120)
+    address = models.CharField('地址', max_length=512)
+
+
 class Product(models.Model):
 
     class Meta:
@@ -20,6 +29,7 @@ class Product(models.Model):
     price = models.DecimalField('零售价', max_digits=40, decimal_places=28)
     member_price = models.DecimalField('会员价', max_digits=40, decimal_places=28, null=True, blank=True)
     update_time = models.DateTimeField('更新时间', auto_now=True, null=True, blank=True)
+    supplier = models.ForeignKey('Supplier', on_delete=models.PROTECT, verbose_name='供应商', null=True, blank=True)
     tags = models.ManyToManyField('Tag')
 
 
