@@ -20,8 +20,9 @@ class CURDTestCase(TestCase):
 
             # 商品标签数据
             self.tag_list = ((1, '电子产品',),
-                             (2, '食品',))
-            digital, food, *_ = Tag.objects.bulk_create(Tag(id=id_, name=name) for (id_, name, ) in self.tag_list)
+                             (2, '食品',),
+                             (3, '饮料'))
+            digital, food, drink = Tag.objects.bulk_create(Tag(id=id_, name=name) for (id_, name, ) in self.tag_list)
 
             # 供应商
             self.supplier_list = ((1, '思想科技', '劳动路2333号'),
@@ -54,9 +55,13 @@ class CURDTestCase(TestCase):
             # 多对多的字段，需要先save
             digital.save()
             food.save()
+            drink.save()
             for product in products:
                 if product.name in ('手机', '电脑', '耳机'):
                     product.tags.add(digital)
+                elif product.name in ('矿泉水',):
+                    product.tags.add(food)
+                    product.tags.add(drink)
                 else:
                     product.tags.add(food)
 
@@ -238,6 +243,14 @@ class CURDTestCase(TestCase):
             # supplier 为 supplier 表的id
             self.assertIn('supplier', product)
             self.assertTrue(isinstance(product['supplier'], int))
+        # value和order by一起工作
+        product_list = Product.objects.order_by('-id').values()
+        self.assertEqual(product_list[0]['id'], len(self.product_list))
+        # many to many
+        # m2m 会列出所有的组合，比如矿泉水时拥有"食品"和"饮料"两个标签
+        # 那么查询出来的结果，矿泉水会出现两次，分别拥有"食品"和"饮料"的标签
+        product_list = Product.objects.order_by('id').values('id', 'name', 'tags')
+        assert product_list
 
     def test_values_list(self):
         # 返回QuertSet，每个元素都是tuple
