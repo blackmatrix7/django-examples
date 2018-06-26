@@ -188,7 +188,41 @@ class CURDTestCase(TestCase):
         customer = Customer.objects.filter(age=21).exclude(name='张三').order_by('id').first()
         self.assertEqual(customer.name, '王一')
 
-    def test_return_list(self):
+    def test_values(self):
+        """
+        以dict返回数据查询结果
+        :return:
+        """
+        # values函数可以指定字段，如果不指定，则是包含查询结果的所有字段
+        product_list = Product.objects.values('id', 'name', 'price')
+        for product in product_list:
+            self.assertTrue(isinstance(product, dict))
+            self.assertIn('id', product)
+            self.assertIn('name', product)
+            self.assertIn('price', product)
+            self.assertNotIn('update_time', product)
+        # 同only一起使用时，values会覆盖only指定的字段
+        product_list = Product.objects.only('id', 'name', 'price').values('member_price')
+        for product in product_list:
+            # 查询出的dict只会有 member_price
+            self.assertTrue(isinstance(product, dict))
+            self.assertNotIn('id', product)
+            self.assertNotIn('name', product)
+            self.assertNotIn('price', product)
+            self.assertIn('member_price', product)
+        # values 和 values_list 必须在 only 之后
+        with self.assertRaises(TypeError):
+            # TypeError: Cannot call only() after .values() or .values_list()
+            Product.objects.values('member_price').only('id', 'name', 'price')
+        # 还可以为value指定key
+        product_list = Product.objects.values(product_id=F('id'))
+        for product in product_list:
+            # 查询出的dict只会有 member_price
+            self.assertTrue(isinstance(product, dict))
+            # 此时没有 id，只有 product_id 了
+            self.assertIn('product_id', product)
+
+    def test_values_list(self):
         # 返回QuertSet，每个元素都是tuple
         customers = Customer.objects.values_list('name').all()
         for customer in customers:
