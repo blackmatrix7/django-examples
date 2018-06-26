@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.db import transaction
 from django.core.exceptions import *
 from django.db.models import DecimalField, F, Q, Sum, Max, Min, Avg, Count
-from .models import Customer, Product, Tag
+from .models import Customer, Product, Tag, Supplier
 
 
 # Create your tests here.
@@ -18,31 +18,42 @@ class CURDTestCase(TestCase):
         with transaction.atomic():
             self.default_update_time = datetime(year=2018, month=5, day=1, hour=8, minute=10, second=30)
 
+            # 商品标签数据
             self.tag_list = ((1, '电子产品',),
                              (2, '食品',))
+            digital, food, *_ = Tag.objects.bulk_create(Tag(id=id_, name=name) for (id_, name, ) in self.tag_list)
 
-            self.product_list = ((1, '手机', 3999, 3700, self.default_update_time),
-                                 (2, '电脑', 7999, 8000, self.default_update_time),
-                                 (3, '耳机', 399, 299, self.default_update_time),
-                                 (4, '矿泉水', 1, 1, self.default_update_time),
-                                 (5, '饼干', 2, 2, self.default_update_time),
-                                 (6, '矿泉水', 2, 2, self.default_update_time))
+            # 供应商
+            self.supplier_list = ((1, '思想科技', '劳动路2333号'),
+                                  (2, '鸭梨电子', '雷布斯路542号'),
+                                  (3, '农妇食品', '长乐路1111号'),
+                                  (4, '桶一食品', '无地址'))
+            sixiang, yali, nongfu, tongyi = Supplier.objects.bulk_create(Supplier(id=id_, name=name, address=address)
+                                                                         for (id_, name, address) in self.supplier_list)
 
+            # 商品
+            self.product_list = ((1, '手机', 3999, 3700, self.default_update_time, sixiang),
+                                 (2, '电脑', 7999, 8000, self.default_update_time, yali),
+                                 (3, '耳机', 399, 299, self.default_update_time, sixiang),
+                                 (4, '矿泉水', 1, 1, self.default_update_time, nongfu),
+                                 (5, '饼干', 2, 2, self.default_update_time, tongyi),
+                                 (6, '矿泉水', 2, 2, self.default_update_time, tongyi))
+            products = Product.objects.bulk_create(Product(id=id_, name=name, price=price, member_price=member_price,
+                                                           update_time=update_time, supplier=supplier)
+                                                   for (id_, name, price, member_price, update_time, supplier)
+                                                   in self.product_list)
+
+            # 顾客
             self.customer_list = ((1, '王一', 21, '15689776542'),
                                   (2, '周二', 72, '13034451353'),
                                   (3, '张三', 21, '13248642709'),
                                   (4, '李四', 13, '13252034306'))
-
-            # 商品标签数据
-            digital, food, *_ = Tag.objects.bulk_create(Tag(id=id_, name=name) for (id_, name, ) in self.tag_list)
-            # 商品数据
-            products = Product.objects.bulk_create(Product(id=id_, name=name, price=price, member_price=member_price,
-                                                           update_time=update_time)
-                                                   for (id_, name, price, member_price, update_time) in self.product_list)
-            # 客户数据
             Customer.objects.bulk_create(Customer(id=id_, name=name, age=age, phone=phone)
                                          for (id_, name, age, phone) in self.customer_list)
-            # 更新商品标签
+            # 更新商品信息
+            # 多对多的字段，需要先save
+            digital.save()
+            food.save()
             for product in products:
                 if product.name in ('手机', '电脑', '耳机'):
                     product.tags.add(digital)
@@ -217,10 +228,16 @@ class CURDTestCase(TestCase):
         # 还可以为value指定key
         product_list = Product.objects.values(product_id=F('id'))
         for product in product_list:
-            # 查询出的dict只会有 member_price
             self.assertTrue(isinstance(product, dict))
             # 此时没有 id，只有 product_id 了
             self.assertIn('product_id', product)
+        # 外键时，values的值为外键的id(假设id是主键)
+        product_list = Product.objects.values('supplier')
+        for product in product_list:
+            self.assertTrue(isinstance(product, dict))
+            # supplier 为 supplier 表的id
+            self.assertIn('supplier', product)
+            self.assertTrue(isinstance(product['supplier'], int))
 
     def test_values_list(self):
         # 返回QuertSet，每个元素都是tuple
@@ -325,6 +342,7 @@ class CURDTestCase(TestCase):
             name = models.CharField('商品名称', max_length=24)
             price = models.DecimalField('零售价', max_digits=10, decimal_places=6)
             member_price = models.DecimalField('会员价', max_digits=10, decimal_places=6, null=True, blank=True)
+            supplier = models.ForeignKey('Supplier', on_delete=models.PROTECT, verbose_name='供应商', null=True, blank=True)
 
             class Meta:
                 managed = False
