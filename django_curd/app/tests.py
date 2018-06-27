@@ -250,7 +250,7 @@ class CURDTestCase(TestCase):
         # m2m 会列出所有的组合，比如矿泉水时拥有"食品"和"饮料"两个标签
         # 那么查询出来的结果，矿泉水会出现两次，分别拥有"食品"和"饮料"的标签
         product_list = Product.objects.order_by('id').values('id', 'name', 'tags')
-        assert product_list
+        self.assertTrue(len(product_list) > len(self.product_list))
 
     def test_values_list(self):
         # 返回QuertSet，每个元素都是tuple
