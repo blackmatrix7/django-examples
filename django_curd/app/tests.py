@@ -4,8 +4,9 @@ from datetime import datetime
 from django.test import TestCase
 from django.db import transaction
 from django.core.exceptions import *
+from django.db.models.deletion import ProtectedError
 from django.db.models import DecimalField, F, Q, Sum, Max, Min, Avg, Count
-from .models import Customer, Product, Tag, Supplier
+from .models import Customer, Product, Tag, Supplier, Shopping
 
 
 # Create your tests here.
@@ -49,8 +50,8 @@ class CURDTestCase(TestCase):
                                   (2, '周二', 72, '13034451353'),
                                   (3, '张三', 21, '13248642709'),
                                   (4, '李四', 13, '13252034306'))
-            Customer.objects.bulk_create(Customer(id=id_, name=name, age=age, phone=phone)
-                                         for (id_, name, age, phone) in self.customer_list)
+            wangyi, zhouer, zhangsan, lisi = Customer.objects.bulk_create(Customer(id=id_, name=name, age=age, phone=phone)
+                                                                          for (id_, name, age, phone) in self.customer_list)
             # 更新商品信息
             # 多对多的字段，需要先save
             digital.save()
@@ -64,6 +65,10 @@ class CURDTestCase(TestCase):
                     product.tags.add(drink)
                 else:
                     product.tags.add(food)
+
+            # 新增购物记录
+            Shopping.objects.bulk_create([Shopping(customer=wangyi, product=products[0], count=2),
+                                          Shopping(customer=lisi, product=products[3], count=3)])
 
     def test_get(self):
         """
@@ -163,8 +168,22 @@ class CURDTestCase(TestCase):
         对queryset的查询结果进行delete
         :return:
         """
-        # TODO 写累了，下次补充，加个todo免得忘了
-        pass
+        # delete会删除queryset的执行结果
+        # 当其他对象的外键指向这个被删除的对象，并且外键约束为CASCADE时，此对象也会同步被删除
+        deleted, obj = Customer.objects.filter(name='李四').delete()
+        self.assertTrue(deleted > 1)
+        self.assertIn('app.Shopping', obj)
+        # 查看deleted的值会发现，与Customer关联的Shopping也同时被删除
+        queryset = Shopping.objects.filter(customer__name='李四')
+        self.assertFalse(queryset.exists())
+        queryset = Customer.objects.filter(name='李四')
+        self.assertFalse(queryset.exists())
+
+        # 测试PROTECT
+        # 需要注意的是CASCADE和PROTECT都是ORM层面仿真的
+        with self.assertRaises(ProtectedError):
+            # django.db.models.deletion.ProtectedError
+            Supplier.objects.filter(name='桶一食品').delete()
 
     def test_update_or_create(self):
         """
