@@ -3,7 +3,7 @@ from django.db import models
 # Create your models here.
 
 
-class Article(models.Model):
+class Pizza(models.Model):
 
-    title = models.CharField('标题', max_length=128)
-    content = models.TextField('内容')
+    toppings = models.CharField('饼底', max_length=128)
+    size = models.IntegerField('尺寸')
