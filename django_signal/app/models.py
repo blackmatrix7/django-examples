@@ -5,5 +5,5 @@ from django.db import models
 
 class Pizza(models.Model):
 
-    toppings = models.CharField('饼底', max_length=128)
+    toppings = models.CharField('配料', max_length=128)
     size = models.IntegerField('尺寸')
