@@ -6,12 +6,14 @@
 # @Software: PyCharm
 from django.dispatch import receiver
 from django.db.models.signals import post_init
-from .models import Article
+from .models import Pizza
 
 __author__ = 'BlackMatrix'
 
 
-@receiver(post_init, sender=Article, dispatch_uid='after_init_model')
+# sender 指定接收哪个model发出的信号，不加sender的话，会接收到所有的model初始化消息
+# dispatch_uid 接收者的唯一
+@receiver(post_init, sender=Pizza, dispatch_uid='after_init_model')
 def after_init_model(sender, **kwargs):
     print(sender)
     print(kwargs)

@@ -1,5 +1,5 @@
 from django.test import TestCase
-from.models import Article
+from.models import Pizza
 
 
 # Create your tests here.
@@ -10,5 +10,5 @@ class SignalTestCase(TestCase):
 
     @staticmethod
     def test_post_init():
-        article = Article(title='test', content='test')
+        article = Pizza(toppings='test', size=9)
         article.save()
