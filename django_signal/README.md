@@ -6,8 +6,6 @@ Django Signal包含一个信号分配者。当框架内发生某些操作时，
 
 ## 内建的Signal
 
-> https://docs.djangoproject.com/en/2.0/ref/signals/
-
 **pre_init**
 
 django.db.models.signals.pre_init
@@ -76,3 +74,44 @@ HTTP请求出现异常时发送信号
 
 ## 自定义Signal
 
+除内置信号外，还可以自定义型号是Singal对象的实例。
+
+signals.py
+
+```
+from django.dispatch import Signal
+pizza_done = Signal(providing_args=['toppings', 'size'])
+```
+
+上面的例子，定义一个pizza_done的型号，接受两个参数：toppings、size。
+
+## 监听信号
+
+我们还需要定义receiver，用于接受型号，并执行一些操作。
+
+### 监听内置信号
+
+对于Django内置的信号，只需要定义receiver即可。
+
+receivers.py
+
+```python
+from django.dispatch import receiver
+from django.db.models.signals import post_init
+
+# post_init指定接受model开始初始化的信号
+# sender 指定接收哪个model发出的信号，不加sender的话，会接收到所有的model初始化消息
+# dispatch_uid 保证接收者的唯一
+@receiver(post_init, sender=Pizza, dispatch_uid='after_init_model')
+def after_init_model(sender, **kwargs):
+    print(sender)
+    print(kwargs)
+    
+
+```
+
+
+
+## 参考
+
+> https://docs.djangoproject.com/en/2.0/ref/signals/
