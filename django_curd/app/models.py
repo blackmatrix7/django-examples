@@ -3,7 +3,23 @@ from django.db import models
 # Create your models here.
 
 
-class Tag(models.Model):
+class BaseModel(models.Model):
+
+    class Meta:
+        abstract = True
+
+    is_deleted = models.BooleanField('是否删除', default=False)
+
+
+class SoftDelManager(models.Manager):
+
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
+
+class Tag(BaseModel):
+
+    objects = SoftDelManager()
 
     class Meta:
         db_table = 'tag'
@@ -11,7 +27,9 @@ class Tag(models.Model):
     name = models.CharField('标签', max_length=24)
 
 
-class Supplier(models.Model):
+class Supplier(BaseModel):
+
+    objects = SoftDelManager()
 
     class Meta:
         db_table = 'supplier'
@@ -20,7 +38,9 @@ class Supplier(models.Model):
     address = models.CharField('地址', max_length=512)
 
 
-class Product(models.Model):
+class Product(BaseModel):
+
+    objects = SoftDelManager()
 
     class Meta:
         db_table = 'product'
@@ -33,7 +53,9 @@ class Product(models.Model):
     tags = models.ManyToManyField('Tag')
 
 
-class Customer(models.Model):
+class Customer(BaseModel):
+
+    objects = SoftDelManager()
 
     class Meta:
         db_table = 'customer'
@@ -50,7 +72,7 @@ class Customer(models.Model):
         return self.name
 
 
-class Shopping(models.Model):
+class Shopping(BaseModel):
 
     class Meta:
         db_table = 'shopping'

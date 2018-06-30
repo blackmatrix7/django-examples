@@ -6,7 +6,7 @@ from django.db import transaction
 from django.core.exceptions import *
 from django.db.models.deletion import ProtectedError
 from django.db.models import DecimalField, F, Q, Sum, Max, Min, Avg, Count
-from .models import Customer, Product, Tag, Supplier, Shopping
+from .models import BaseModel, SoftDelManager, Customer, Product, Tag, Supplier, Shopping
 
 
 # Create your tests here.
@@ -185,6 +185,14 @@ class CURDTestCase(TestCase):
             # django.db.models.deletion.ProtectedError
             Supplier.objects.filter(name='桶一食品').delete()
 
+    def test_soft_delete(self):
+        # 未被软删除的情况
+        self.assertTrue(Product.objects.filter(id=1).exists())
+        # 更新is_deleted为True，做软删除
+        Product.objects.filter(id=1).update(is_deleted=True)
+        # 查询不到任何数据
+        self.assertFalse(Product.objects.filter(id=1).exists())
+
     def test_update_or_create(self):
         """
         update_or_create 返回tuple
@@ -285,16 +293,18 @@ class CURDTestCase(TestCase):
         self.assertIsInstance(customer, tuple)
 
     def test_f_object(self):
-        # F对象，使用查询条件中字段的值，参与比较
-        # 查询会员价大于零售价的商品，可能是大数据杀熟
-        product_list = Product.objects.filter(member_price__gte=F('price')).all()
-        assert product_list[0].name
-        self.assertEqual(product_list[0].name, '电脑')
-        # 电脑涨价
-        Product.objects.filter(name='电脑').update(price=F('price')+100)
-        # 需要重新取值，否则内存中的product价格是旧的
-        product = Product.objects.get(name='电脑')
-        self.assertEqual(product.price, 8099)
+        with transaction.atomic():
+            # F对象，使用查询条件中字段的值，参与比较
+            # 查询会员价大于零售价的商品，可能是大数据杀熟
+            product_list = Product.objects.filter(member_price__gte=F('price')).all()
+            assert product_list[0].name
+            self.assertEqual(product_list[0].name, '电脑')
+            # 电脑涨价
+            Product.objects.filter(name='电脑').update(price=F('price')+100)
+            Product.objects.filter(name='电脑').update(price=F('price')-99)
+            # 需要重新取值，否则内存中的product价格是旧的
+            product = Product.objects.get(name='电脑')
+            self.assertEqual(product.price, 8000)
 
     def test_auto_now(self):
         """
@@ -369,7 +379,9 @@ class CURDTestCase(TestCase):
         # 如果不希望每次都使用defer，可以创建同名的model，只要将managed设置为False即可
         from django.db import models
 
-        class ProductNoUpdateTime(models.Model):
+        class ProductNoUpdateTime(BaseModel):
+
+            objects = SoftDelManager()
 
             name = models.CharField('商品名称', max_length=24)
             price = models.DecimalField('零售价', max_digits=10, decimal_places=6)
