@@ -106,8 +106,6 @@ from django.db.models.signals import post_init
 def after_init_model(sender, **kwargs):
     print(sender)
     print(kwargs)
-    
-
 ```
 
 
