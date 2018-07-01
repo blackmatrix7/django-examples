@@ -67,8 +67,17 @@ class CURDTestCase(TestCase):
                     product.tags.add(food)
 
             # 新增购物记录
-            Shopping.objects.bulk_create([Shopping(customer=wangyi, product=products[0], count=2),
-                                          Shopping(customer=lisi, product=products[3], count=3)])
+            Shopping.objects.bulk_create([
+                Shopping(customer=wangyi, product=products[0], count=2),
+                Shopping(customer=wangyi, product=products[1], count=5),
+                Shopping(customer=wangyi, product=products[2], count=10),
+                Shopping(customer=lisi, product=products[0], count=7),
+                Shopping(customer=lisi, product=products[1], count=1),
+                Shopping(customer=lisi, product=products[2], count=5),
+                Shopping(customer=zhangsan, product=products[0], count=3),
+                Shopping(customer=zhangsan, product=products[1], count=8),
+                Shopping(customer=zhangsan, product=products[2], count=1),
+            ])
 
     def test_get(self):
         """
