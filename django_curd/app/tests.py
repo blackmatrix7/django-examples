@@ -190,7 +190,6 @@ class CURDTestCase(TestCase):
         self.assertFalse(queryset.exists())
         queryset = Customer.objects.filter(name='李四')
         self.assertFalse(queryset.exists())
-
         # 测试PROTECT
         # 需要注意的是CASCADE和PROTECT都是ORM层面仿真的
         with self.assertRaises(ProtectedError):
