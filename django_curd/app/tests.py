@@ -186,12 +186,20 @@ class CURDTestCase(TestCase):
             Supplier.objects.filter(name='桶一食品').delete()
 
     def test_soft_delete(self):
+        """
+        软删除处理，通过自定义Manager，在get_queryset的时候，自动添加一个is_deleted=False的过滤条件
+        :return:
+        """
         # 未被软删除的情况
         self.assertTrue(Product.objects.filter(id=1).exists())
         # 更新is_deleted为True，做软删除
         Product.objects.filter(id=1).update(is_deleted=True)
         # 查询不到任何数据
         self.assertFalse(Product.objects.filter(id=1).exists())
+        # 对于get也有效果
+        with self.assertRaises(ObjectDoesNotExist):
+            product = Product.objects.get(id=1)
+            self.assertIsNone(product)
 
     def test_update_or_create(self):
         """
