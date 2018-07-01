@@ -460,6 +460,9 @@ class CURDTestCase(TestCase):
         data = Product.objects.aggregate(count=Count(F('price')))
         self.assertEqual(data['count'], len(self.product_list))
 
+    def test_annotate(self):
+        pass
+
     def test_select_for_update(self):
         """
         SQLite下无效， 需要mysql
