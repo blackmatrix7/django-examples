@@ -452,9 +452,9 @@ class CURDTestCase(TestCase):
     def test_aggregate_annotate(self):
         """
         Django 聚合函数
+        aggregate返回的结果为dict，annotate返回的结果为queryset
         :return:
         """
-        # aggregate返回的结果为dict，annotate返回的结果为queryset
         # Sum等对象的output_field参数可以设置输出的字段类型
         data = Product.objects.aggregate(price=Sum('price', output_field=DecimalField()))
         self.assertEqual(data['price'], Decimal(sum((item[2] for item in self.product_list))))
@@ -480,10 +480,9 @@ class CURDTestCase(TestCase):
         # 例如统计所有购买单价在200以上的商品的总数
         customer_list = Customer.objects.annotate(count=Sum('shopping__count',
                                                             filter=Q(shopping__product__price__gte=200))
-                                                  ).values()
+                                                  )
         for customer in customer_list:
-            self.assertTrue(customer['count'] > 0)
-
+            self.assertTrue(customer.count > 0)
 
     def test_select_for_update(self):
         """
