@@ -449,34 +449,28 @@ class CURDTestCase(TestCase):
         self.assertIn('name', str(prodcut_list.query))
         self.assertIn('price', str(prodcut_list.query))
 
-    def test_aggregate(self):
+    def test_aggregate_annotate(self):
         """
         Django 聚合函数
         :return:
         """
-        # output_field 可以设置输出的字段类型
-        # Sum
-        data = Product.objects.aggregate(price=Sum(F('price'), output_field=DecimalField()))
+        # aggregate返回的结果为dict，annotate返回的结果为queryset
+        # Sum等对象的output_field参数可以设置输出的字段类型
+        data = Product.objects.aggregate(price=Sum('price', output_field=DecimalField()))
         self.assertEqual(data['price'], Decimal(sum((item[2] for item in self.product_list))))
         # Max
-        data = Product.objects.aggregate(price=Max(F('price'), output_field=DecimalField()))
+        data = Product.objects.aggregate(price=Max('price', output_field=DecimalField()))
         self.assertEqual(data['price'], Decimal(max((item[2] for item in self.product_list))))
         # Min
-        data = Product.objects.aggregate(price=Min(F('price'), output_field=DecimalField()))
+        data = Product.objects.aggregate(price=Min('price', output_field=DecimalField()))
         self.assertEqual(data['price'], Decimal(min((item[2] for item in self.product_list))))
         # Avg
-        data = Product.objects.aggregate(price=Avg(F('price'), output_field=DecimalField()))
+        data = Product.objects.aggregate(price=Avg('price', output_field=DecimalField()))
         self.assertEqual(data['price'], Decimal(sum((item[2] for item in self.product_list)) / len(self.product_list)))
         # Count
         # Count还有个参数为distinct，默认为False，当为True时，只统计不重复的数据
-        data = Product.objects.aggregate(count=Count(F('price')))
+        data = Product.objects.aggregate(count=Count('price'))
         self.assertEqual(data['count'], len(self.product_list))
-
-    def test_annotate(self):
-        """
-        annotate
-        :return:
-        """
         # 使用 annotate 查询顾客买过的商品总数量
         customer_list = Customer.objects.annotate(count=Sum('shopping__count')).values()
         for customer in customer_list:
@@ -489,6 +483,7 @@ class CURDTestCase(TestCase):
                                                   ).values()
         for customer in customer_list:
             self.assertTrue(customer['count'] > 0)
+
 
     def test_select_for_update(self):
         """
