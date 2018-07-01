@@ -69,14 +69,17 @@ class CURDTestCase(TestCase):
             # 新增购物记录
             Shopping.objects.bulk_create([
                 Shopping(customer=wangyi, product=products[0], count=2),
-                Shopping(customer=wangyi, product=products[1], count=5),
-                Shopping(customer=wangyi, product=products[2], count=10),
-                Shopping(customer=lisi, product=products[0], count=7),
-                Shopping(customer=lisi, product=products[1], count=1),
-                Shopping(customer=lisi, product=products[2], count=5),
+                Shopping(customer=wangyi, product=products[3], count=5),
+                Shopping(customer=wangyi, product=products[4], count=10),
+                Shopping(customer=zhouer, product=products[1], count=1),
+                Shopping(customer=zhouer, product=products[2], count=2),
+                Shopping(customer=zhouer, product=products[4], count=3),
+                Shopping(customer=lisi, product=products[3], count=7),
+                Shopping(customer=lisi, product=products[5], count=1),
+                Shopping(customer=lisi, product=products[0], count=5),
                 Shopping(customer=zhangsan, product=products[0], count=3),
-                Shopping(customer=zhangsan, product=products[1], count=8),
-                Shopping(customer=zhangsan, product=products[2], count=1),
+                Shopping(customer=zhangsan, product=products[5], count=8),
+                Shopping(customer=zhangsan, product=products[4], count=1),
             ])
 
     def test_get(self):
@@ -470,7 +473,22 @@ class CURDTestCase(TestCase):
         self.assertEqual(data['count'], len(self.product_list))
 
     def test_annotate(self):
-        pass
+        """
+        annotate
+        :return:
+        """
+        # 使用 annotate 查询顾客买过的商品总数量
+        customer_list = Customer.objects.annotate(count=Sum('shopping__count')).values()
+        for customer in customer_list:
+            self.assertTrue(customer['count'] > 0)
+        # 在Sum、Max、Min、Avg、Count等对象中，可以增加filter参数，用于过滤条件
+        # 为filter参数赋值一个Q对象，Q对象内接收过滤条件
+        # 例如统计所有购买单价在200以上的商品的总数
+        customer_list = Customer.objects.annotate(count=Sum('shopping__count',
+                                                            filter=Q(shopping__product__price__gte=200))
+                                                  ).values()
+        for customer in customer_list:
+            self.assertTrue(customer['count'] > 0)
 
     def test_select_for_update(self):
         """
