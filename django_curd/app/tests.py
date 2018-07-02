@@ -49,9 +49,10 @@ class CURDTestCase(TestCase):
             self.customer_list = ((1, '王一', 21, '15689776542'),
                                   (2, '周二', 72, '13034451353'),
                                   (3, '张三', 21, '13248642709'),
-                                  (4, '李四', 13, '13252034306'))
-            wangyi, zhouer, zhangsan, lisi = Customer.objects.bulk_create(Customer(id=id_, name=name, age=age, phone=phone)
-                                                                          for (id_, name, age, phone) in self.customer_list)
+                                  (4, 'Tom', 23, '13221042300'),
+                                  (5, '李四', 13, '13252034306'))
+            wangyi, zhouer, zhangsan, lisi, tom = Customer.objects.bulk_create(Customer(id=id_, name=name, age=age, phone=phone)
+                                                                               for (id_, name, age, phone) in self.customer_list)
             # 更新商品信息
             # 多对多的字段，需要先save
             digital.save()
@@ -74,12 +75,12 @@ class CURDTestCase(TestCase):
                 Shopping(customer=zhouer, product=products[1], count=1),
                 Shopping(customer=zhouer, product=products[2], count=2),
                 Shopping(customer=zhouer, product=products[4], count=3),
-                Shopping(customer=lisi, product=products[3], count=7),
-                Shopping(customer=lisi, product=products[5], count=1),
-                Shopping(customer=lisi, product=products[0], count=5),
                 Shopping(customer=zhangsan, product=products[0], count=3),
                 Shopping(customer=zhangsan, product=products[5], count=8),
                 Shopping(customer=zhangsan, product=products[4], count=1),
+                Shopping(customer=lisi, product=products[3], count=7),
+                Shopping(customer=lisi, product=products[5], count=1),
+                Shopping(customer=lisi, product=products[0], count=5),
             ])
 
     def test_get(self):
@@ -135,6 +136,7 @@ class CURDTestCase(TestCase):
         # bulk_create 返回list，list内是创建的model
         create_list = Product.objects.bulk_create(product_list, 100)
         self.assertIsNotNone(create_list)
+        # .count()获取总行数
         self.assertEqual(Product.objects.filter(name__endswith='水笔').count(), 3)
 
     def test_update(self):
@@ -473,7 +475,8 @@ class CURDTestCase(TestCase):
         # 使用 annotate 查询顾客买过的商品总数量
         customer_list = Customer.objects.annotate(count=Sum('shopping__count')).values()
         for customer in customer_list:
-            self.assertTrue(customer['count'] > 0)
+            if customer['count'] is not None:
+                self.assertTrue(customer['count'] > 0)
         # 在Sum、Max、Min、Avg、Count等对象中，可以增加filter参数，用于过滤条件
         # 为filter参数赋值一个Q对象，Q对象内接收过滤条件
         # 例如统计所有购买单价在200以上的商品的总数
@@ -481,7 +484,21 @@ class CURDTestCase(TestCase):
                                                             filter=Q(shopping__product__price__gte=200))
                                                   )
         for customer in customer_list:
-            self.assertTrue(customer.count > 0)
+            if customer.count is not None:
+                self.assertTrue(customer.count > 0)
+
+    def test_contains(self):
+        """
+        等价于SQL的like "%xxxx%"
+        大小写敏感
+        :return:
+        """
+        # 查出所有姓名包含"tom"的顾客
+        customer_list = Customer.objects.filter(name__contains='tom').all()
+        self.assertTrue(customer_list.count() == 0)
+        # 如果需要大小写不敏感，使用icontains
+        customer_list = Customer.objects.filter(name__icontains='tom').all()
+        self.assertTrue(customer_list.count() == 1)
 
     def test_select_for_update(self):
         """
