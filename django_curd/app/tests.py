@@ -49,8 +49,8 @@ class CURDTestCase(TestCase):
             self.customer_list = ((1, '王一', 21, '15689776542'),
                                   (2, '周二', 72, '13034451353'),
                                   (3, '张三', 21, '13248642709'),
-                                  (4, 'Tom', 23, '13221042300'),
-                                  (5, '李四', 13, '13252034306'))
+                                  (4, '李四', 13, '13252034306'),
+                                  (5, 'Tom', 23, '13221042300'))
             wangyi, zhouer, zhangsan, lisi, tom = Customer.objects.bulk_create(Customer(id=id_, name=name, age=age, phone=phone)
                                                                                for (id_, name, age, phone) in self.customer_list)
             # 更新商品信息
