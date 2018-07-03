@@ -493,9 +493,16 @@ class CURDTestCase(TestCase):
         大小写敏感
         :return:
         """
+        """
+        因为测试的例子中，使用的是SQLite
+        在SQLite中，ASCII范围内字符串不区分大小写，ASCII范围之外的字符串，区分大小写
+        所以下面的contains和name__icontains实际上是等同的，都不区分大小写
+        详见：
+        https://docs.djangoproject.com/en/2.0/ref/databases/#sqlite-string-matching
+        """
         # 查出所有姓名包含"tom"的顾客
         customer_list = Customer.objects.filter(name__contains='tom').all()
-        self.assertTrue(customer_list.count() == 0)
+        self.assertTrue(customer_list.count() == 1)
         # 如果需要大小写不敏感，使用icontains
         customer_list = Customer.objects.filter(name__icontains='tom').all()
         self.assertTrue(customer_list.count() == 1)
