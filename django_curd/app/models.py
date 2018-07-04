@@ -62,7 +62,7 @@ class Customer(BaseModel):
 
     name = models.CharField('姓名', max_length=24)
     age = models.IntegerField('年龄')
-    products = models.ManyToManyField(Product, through='Shopping', through_fields=('customer', 'product'))
+    products = models.ManyToManyField(Product, through='Order', through_fields=('customer', 'product'))
     phone = models.CharField('手机', max_length=11, unique=True)
 
     def __str__(self):
@@ -72,10 +72,10 @@ class Customer(BaseModel):
         return self.name
 
 
-class Shopping(BaseModel):
+class Order(BaseModel):
 
     class Meta:
-        db_table = 'shopping'
+        db_table = 'order'
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, verbose_name='客户')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='商品')
