@@ -536,9 +536,10 @@ class CURDTestCase(TestCase):
 
     def test_many_to_many(self):
         """
-        测试多对多，没有自己指定关系表
+        测试多对多
         :return:
         """
+        # ManyToMany，没有自定义关系表
         # 查询商品的标签
         phone = Product.objects.get(name='手机')
         # tags 属性定义在Product model下，所以可以使用tags.all()获取商品的所有标签
@@ -569,9 +570,11 @@ class CURDTestCase(TestCase):
         # 移除某个多对多的关系，remove接受model或主键
         phone.tags.remove(new_tag)
         # 等同于上面 phone.tags.remove(new_tag.id)
+        self.assertTrue(len(phone.tags.all()) == 1)
         # 清除多对多的关系
         phone.tags.clear()
         self.assertTrue(len(phone.tags.all()) == 0)
+        
 
     def tearDown(self):
         pass
