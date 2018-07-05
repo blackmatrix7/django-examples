@@ -83,6 +83,9 @@ class CURDTestCase(TestCase):
                 Order(customer=lisi, product=products[0], count=5),
             ])
 
+    def tearDown(self):
+        pass
+
     def test_get(self):
         """
         查询
@@ -590,7 +593,3 @@ class CURDTestCase(TestCase):
         # 清除客户与购买商品的关系
         customer.products.clear()
         self.assertTrue(customer.products.count() == 0)
-
-
-    def tearDown(self):
-        pass
