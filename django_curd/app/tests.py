@@ -574,7 +574,7 @@ class CURDTestCase(TestCase):
         # 清除多对多的关系
         phone.tags.clear()
         self.assertTrue(len(phone.tags.all()) == 0)
-        
+
 
     def tearDown(self):
         pass
