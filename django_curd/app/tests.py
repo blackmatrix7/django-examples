@@ -574,6 +574,22 @@ class CURDTestCase(TestCase):
         # 清除多对多的关系
         phone.tags.clear()
         self.assertTrue(len(phone.tags.all()) == 0)
+        # 新增标签除了使用add外，还可以用set批量新增
+        tag1 = Tag.objects.get(name='电子产品')
+        tag2 = Tag.objects.get(name='通讯工具')
+        phone.tags.set([tag1, tag2])
+        self.assertTrue(len(phone.tags.all()) == 2)
+
+        # 自定义中间表
+        # 通过models.ManyToManyField的through和through_fields自定义中间表
+        # add、remove、set都不可用，能使用的只有all()和clear()
+        customer = Customer.objects.get(name='张三')
+        # 查询客户购买过的商品
+        products = customer.products.all()
+        self.assertTrue(products.count() == 3)
+        # 清除客户与购买商品的关系
+        customer.products.clear()
+        self.assertTrue(customer.products.count() == 0)
 
 
     def tearDown(self):
