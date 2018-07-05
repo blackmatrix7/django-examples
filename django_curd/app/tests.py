@@ -593,3 +593,22 @@ class CURDTestCase(TestCase):
         # 清除客户与购买商品的关系
         customer.products.clear()
         self.assertTrue(customer.products.count() == 0)
+
+    def test_select_related(self):
+        """
+        优化外键查询
+        :return:
+        """
+        # 查询商品的供应商名称
+        # 这种查询方法效率比较低，需要查询出所有的商品，然后逐一获取商品的supplier外键
+        # 在通过外键获取supplier供应商数据，n条商品数据就需要n+1次查询
+        product_list = list(Product.objects.all())
+        for product in product_list:
+            self.assertIsNotNone(product.supplier)
+        # 通过select_related进行优化
+        product_list = Product.objects.select_related('supplier')
+        # 通过join一次查询将供应商信息一并查询出来
+        self.assertTrue('JOIN' in str(product_list.query))
+        # 再遍历商品数据时，访问商品的供应商数据，不会再触发数据库访问
+        for product in product_list.all():
+            self.assertTrue(product.supplier)
