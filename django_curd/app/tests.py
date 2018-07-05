@@ -6,7 +6,7 @@ from django.db import transaction
 from django.core.exceptions import *
 from django.db.models.deletion import ProtectedError
 from django.db.models import DecimalField, F, Q, Sum, Max, Min, Avg, Count
-from .models import BaseModel, SoftDelManager, Customer, Product, Tag, Supplier, Shopping
+from .models import BaseModel, SoftDelManager, Customer, Product, Tag, Supplier, Order
 
 
 # Create your tests here.
@@ -68,19 +68,19 @@ class CURDTestCase(TestCase):
                     product.tags.add(food)
 
             # 新增购物记录
-            Shopping.objects.bulk_create([
-                Shopping(customer=wangyi, product=products[0], count=2),
-                Shopping(customer=wangyi, product=products[3], count=5),
-                Shopping(customer=wangyi, product=products[4], count=10),
-                Shopping(customer=zhouer, product=products[1], count=1),
-                Shopping(customer=zhouer, product=products[2], count=2),
-                Shopping(customer=zhouer, product=products[4], count=3),
-                Shopping(customer=zhangsan, product=products[0], count=3),
-                Shopping(customer=zhangsan, product=products[5], count=8),
-                Shopping(customer=zhangsan, product=products[4], count=1),
-                Shopping(customer=lisi, product=products[3], count=7),
-                Shopping(customer=lisi, product=products[5], count=1),
-                Shopping(customer=lisi, product=products[0], count=5),
+            Order.objects.bulk_create([
+                Order(customer=wangyi, product=products[0], count=2),
+                Order(customer=wangyi, product=products[3], count=5),
+                Order(customer=wangyi, product=products[4], count=10),
+                Order(customer=zhouer, product=products[1], count=1),
+                Order(customer=zhouer, product=products[2], count=2),
+                Order(customer=zhouer, product=products[4], count=3),
+                Order(customer=zhangsan, product=products[0], count=3),
+                Order(customer=zhangsan, product=products[5], count=8),
+                Order(customer=zhangsan, product=products[4], count=1),
+                Order(customer=lisi, product=products[3], count=7),
+                Order(customer=lisi, product=products[5], count=1),
+                Order(customer=lisi, product=products[0], count=5),
             ])
 
     def test_get(self):
@@ -186,9 +186,9 @@ class CURDTestCase(TestCase):
         # 当其他对象的外键指向这个被删除的对象，并且外键约束为CASCADE时，此对象也会同步被删除
         deleted, obj = Customer.objects.filter(name='李四').delete()
         self.assertTrue(deleted > 1)
-        self.assertIn('app.Shopping', obj)
+        self.assertIn('app.Order', obj)
         # 查看deleted的值会发现，与Customer关联的Shopping也同时被删除
-        queryset = Shopping.objects.filter(customer__name='李四')
+        queryset = Order.objects.filter(customer__name='李四')
         self.assertFalse(queryset.exists())
         queryset = Customer.objects.filter(name='李四')
         self.assertFalse(queryset.exists())
@@ -473,15 +473,15 @@ class CURDTestCase(TestCase):
         data = Product.objects.aggregate(count=Count('price'))
         self.assertEqual(data['count'], len(self.product_list))
         # 使用 annotate 查询顾客买过的商品总数量
-        customer_list = Customer.objects.annotate(count=Sum('shopping__count')).values()
+        customer_list = Customer.objects.annotate(count=Sum('order__count')).values()
         for customer in customer_list:
             if customer['count'] is not None:
                 self.assertTrue(customer['count'] > 0)
         # 在Sum、Max、Min、Avg、Count等对象中，可以增加filter参数，用于过滤条件
         # 为filter参数赋值一个Q对象，Q对象内接收过滤条件
         # 例如统计所有购买单价在200以上的商品的总数
-        customer_list = Customer.objects.annotate(count=Sum('shopping__count',
-                                                            filter=Q(shopping__product__price__gte=200))
+        customer_list = Customer.objects.annotate(count=Sum('order__count',
+                                                            filter=Q(order__product__price__gte=200))
                                                   )
         for customer in customer_list:
             if customer.count is not None:
@@ -506,6 +506,25 @@ class CURDTestCase(TestCase):
         # 如果需要大小写不敏感，使用icontains
         customer_list = Customer.objects.filter(name__icontains='tom').all()
         self.assertTrue(customer_list.count() == 1)
+
+    def test_in(self):
+        """
+        等价于SQL的in，可以给in赋值一个可迭代对象，通常是list、tuple或者queryset
+        :return:
+        """
+        customer_list = Customer.objects.filter(id__in=[1, 2, 3, 4])
+        self.assertTrue(customer_list.count() == 4)
+        # 查询上述客户的购买记录
+        order_list = Order.objects.filter(customer__in=customer_list)
+        # 基础数据中，每个人有三条购买记录，一共12条
+        self.assertTrue(order_list.count() == 12)
+        # 如果queryset使用了values(),需要确保values()里只有一个字段的结果
+        # 如果有多个字段，会引发TypeError
+        with self.assertRaises(TypeError):
+            customer_list = Customer.objects.filter(id__in=[1, 2, 3, 4]).values('id', 'name')
+            # 查询上述客户的购买记录
+            order_list = list(Order.objects.filter(customer__in=customer_list))
+            self.assertIsNotNone(order_list)
 
     def test_select_for_update(self):
         """
