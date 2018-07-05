@@ -543,12 +543,35 @@ class CURDTestCase(TestCase):
         phone = Product.objects.get(name='手机')
         # tags 属性定义在Product model下，所以可以使用tags.all()获取商品的所有标签
         tags = list(phone.tags.all())
-        self.assertTrue(len(tags) >= 1)
+        self.assertTrue(len(tags) == 1)
         # 查询标签下的商品
         tag = Tag.objects.get(name='电子产品')
         # tag 下没有product属性，所以通过product_set获取标签下所有的商品
         products = list(tag.product_set.all())
-        self.assertTrue(len(products) >= 1)
+        self.assertTrue(len(products) > 1)
+        # 新增多对多关系
+        new_tag = Tag(name='通讯工具')
+        # 新增多对多关系中，两个model的实例都必须先save
+        new_tag.save()
+        # 为手机新增通讯工具的标签
+        phone.tags.add(new_tag)
+        tags = list(phone.tags.all())
+        self.assertTrue(len(tags) == 2)
+        # 为食品标签增加冰激凌
+        ice_cream = Product(name='冰激凌', price=6, member_price=5)
+        # 同样需要save
+        ice_cream.save()
+        tag = Tag.objects.get(name='食品')
+        # 同样使用product_set.add()
+        tag.product_set.add(ice_cream)
+        products = list(tag.product_set.all())
+        self.assertTrue(len(products) == 4)
+        # 移除某个多对多的关系，remove接受model或主键
+        phone.tags.remove(new_tag)
+        # 等同于上面 phone.tags.remove(new_tag.id)
+        # 清除多对多的关系
+        phone.tags.clear()
+        self.assertTrue(len(phone.tags.all()) == 0)
 
     def tearDown(self):
         pass
