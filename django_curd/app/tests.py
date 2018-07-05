@@ -397,7 +397,7 @@ class CURDTestCase(TestCase):
         prodcut_list = Product.objects.defer('id').all()
         # 查询语句中存在 id 字段
         self.assertIn('id', str(prodcut_list.query))
-        # 如果不希望每次都使用defer，可以创建同名的model，只要将managed设置为False即可
+        # 如果不希望每次查询都使用defer，可以创建同名的model，只要将managed设置为False即可
         from django.db import models
 
         class ProductNoUpdateTime(BaseModel):
@@ -539,10 +539,16 @@ class CURDTestCase(TestCase):
         测试多对多，没有自己指定关系表
         :return:
         """
-        pass
-        # 新增标签与商品的关系
-        # product = Product.objects.get(name='手机')
-        # product
+        # 查询商品的标签
+        phone = Product.objects.get(name='手机')
+        # tags 属性定义在Product model下，所以可以使用tags.all()获取商品的所有标签
+        tags = list(phone.tags.all())
+        self.assertTrue(len(tags) >= 1)
+        # 查询标签下的商品
+        tag = Tag.objects.get(name='电子产品')
+        # tag 下没有product属性，所以通过product_set获取标签下所有的商品
+        products = list(tag.product_set.all())
+        self.assertTrue(len(products) >= 1)
 
     def tearDown(self):
         pass
