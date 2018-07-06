@@ -596,7 +596,7 @@ class CURDTestCase(TestCase):
 
     def test_select_related(self):
         """
-        优化外键查询
+        select_related 只能用于一对一的外键关系
         :return:
         """
         # 查询商品的供应商名称
@@ -611,4 +611,11 @@ class CURDTestCase(TestCase):
         self.assertTrue('JOIN' in str(product_list.query))
         # 再遍历商品数据时，访问商品的供应商数据，不会再触发数据库访问
         for product in product_list.all():
-            self.assertTrue(product.supplier)
+            self.assertIsNotNone(product.supplier)
+
+    def test_prefetch_related(self):
+        """
+        外键查询优化
+        :return:
+        """
+        pass
