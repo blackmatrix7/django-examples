@@ -616,6 +616,8 @@ class CURDTestCase(TestCase):
     def test_prefetch_related(self):
         """
         外键查询优化
+        与select_related在sql语句中join不同
+        prefetch_related相当于在python内存中进行的join
         :return:
         """
         pass
