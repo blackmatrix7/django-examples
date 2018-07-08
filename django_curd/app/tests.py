@@ -618,6 +618,17 @@ class CURDTestCase(TestCase):
         外键查询优化
         与select_related在sql语句中join不同
         prefetch_related相当于在python内存中进行的join
+        select_related 适用于一对一的情况，而prefetch_related适用于一对一和多对多
         :return:
         """
-        pass
+        # 通过 prefetch_related 进行优化，将Product和Supplier的数据都查询出来，在内存中进行类似join的操作
+        product_list = Product.objects.prefetch_related('supplier')
+        # 再遍历商品数据时，访问商品的供应商数据，不会再触发数据库访问
+        for product in product_list.all():
+            self.assertIsNotNone(product.supplier)
+        # 多对多的查询
+        product_list = Product.objects.prefetch_related('tags')
+        # 再遍历商品数据时，访问商品的供应商数据，不会再触发数据库访问
+        for product in product_list.all():
+            self.assertIsNotNone(product.tags.all())
+
