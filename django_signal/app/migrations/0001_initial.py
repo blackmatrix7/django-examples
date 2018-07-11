@@ -15,8 +15,8 @@ class Migration(migrations.Migration):
             name='Pizza',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('toppings', models.CharField(max_length=128, verbose_name='饼底')),
-                ('size', models.IntegerField(verbose_name='尺寸')),
+                ('toppings', models.CharField(max_length=128, verbose_name='toppings')),
+                ('size', models.IntegerField(verbose_name='size')),
             ],
         ),
     ]
