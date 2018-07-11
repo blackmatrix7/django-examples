@@ -631,4 +631,3 @@ class CURDTestCase(TestCase):
         # 再遍历商品数据时，访问商品的供应商数据，不会再触发数据库访问
         for product in product_list.all():
             self.assertIsNotNone(product.tags.all())
-
