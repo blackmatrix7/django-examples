@@ -108,6 +108,39 @@ def after_init_model(sender, **kwargs):
     print(kwargs)
 ```
 
+### 监听自定义信号
+
+监听自定义的信号时，同样需要定义receiver。
+
+通监听内置信号一样，使用receiver装饰器，设定需要监听的信号，及通过dispatch_uid保证接受者的唯一
+
+```python
+from django.dispatch import receiver
+from .signals import pizza_done
+
+# 接受自定义信号
+@receiver(pizza_done, dispatch_uid='pizza_done')
+def receiver_pizza_done(sender, **kwargs):
+    print('pizza donen!')
+    print(kwargs)
+```
+
+### 监听多个信号
+
+receiver可以同时监听多个信号，假如我们需要同时监听post_init和pizza_done两个信号
+
+```python
+from django.dispatch import receiver
+from django.db.models.signals import post_init
+from .signals import pizza_done
+
+# 接受自定义信号
+@receiver([pizza_done, post_init], dispatch_uid='pizza_done')
+def receiver_pizza_done(sender, **kwargs):
+    print('pizza donen!')
+    print(kwargs)
+```
+
 
 
 ## 参考
