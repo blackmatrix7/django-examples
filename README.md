@@ -27,3 +27,7 @@ Django ORM 操作示例
 ## [Django REST](https://github.com/blackmatrix7/django-examples/tree/master/django_rest)
 
 Django REST 框架练习，未完成
+
+## [Django Signal](https://github.com/blackmatrix7/django-examples/tree/master/django_signal)
+
+Django 信号模块示例
