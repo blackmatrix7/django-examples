@@ -10,6 +10,8 @@ __author__ = 'BlackMatrix'
 
 pizza_done = Signal(providing_args=['toppings', 'size'])
 
+close_store = Signal(providing_args=['turnover'])
+
 
 if __name__ == '__main__':
     pass
