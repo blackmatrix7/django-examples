@@ -10,6 +10,8 @@ __author__ = 'BlackMatrix'
 
 pizza_done = Signal(providing_args=['toppings', 'size'])
 
+open_store = Signal()
+
 close_store = Signal(providing_args=['turnover'])
 
 
