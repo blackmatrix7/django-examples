@@ -7,7 +7,7 @@
 from django.dispatch import receiver
 from django.db.models.signals import post_init
 from .models import Pizza
-from .signals import pizza_done, close_store
+from .signals import pizza_done, close_store, open_store
 
 __author__ = 'BlackMatrix'
 
@@ -23,15 +23,18 @@ def after_init_model(sender, **kwargs):
 # 接受自定义信号
 @receiver(pizza_done, dispatch_uid='pizza_done')
 def receiver_pizza_done(sender, **kwargs):
-    print('pizza donen!')
+    print('pizza done!')
     print(kwargs)
 
 
 # 接收多个信号
-@receiver([close_store, pizza_done], dispatch_uid='two_signals')
+@receiver([open_store, close_store], dispatch_uid='two_signals')
 def receiver_pizza_done(sender, **kwargs):
-    print('pizza donen! close store!')
-    print(kwargs)
+    signal = kwargs['signal']
+    if signal is open_store:
+        print('open_store!')
+    elif signal is close_store:
+        print('close store!')
 
 
 
