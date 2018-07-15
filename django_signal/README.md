@@ -127,18 +127,32 @@ def receiver_pizza_done(sender, **kwargs):
 
 ### 监听多个信号
 
-receiver可以同时监听多个信号，假如我们需要同时监听post_init和pizza_done两个信号
+receiver可以同时监听多个信号，假如我们需要同时监听开店和关店两个信号。
+
+定义这两个信号
 
 ```python
-from django.dispatch import receiver
-from django.db.models.signals import post_init
-from .signals import pizza_done
+open_store = Signal()
+# 打烊需要传入营业额
+close_store = Signal(providing_args=['turnover'])
+```
 
-# 接受自定义信号
-@receiver([pizza_done, post_init], dispatch_uid='pizza_done')
+定义接收器，receiver装饰器接受以list传入的多个信号
+
+```python
+from .signals import close_store, open_store
+
+# 接收多个信号
+@receiver([open_store, close_store], dispatch_uid='two_signals')
 def receiver_pizza_done(sender, **kwargs):
-    print('pizza donen!')
-    print(kwargs)
+    # 假设有一些开关店前必要的准备
+    signal = kwargs['signal']
+    # 判断开店还是关店，输出对应的文字
+    # 注意传入的signal就是定义的signal
+    if signal is open_store:
+        print('open_store!')
+    elif signal is close_store:
+        print('close store!')
 ```
 
 
