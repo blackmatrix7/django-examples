@@ -1,6 +1,7 @@
 from django.test import TestCase
 from.models import Pizza
 from .signals import pizza_done, close_store, open_store
+from .receivers import receiver_pizza_done
 
 
 # Create your tests here.
@@ -20,4 +21,9 @@ class SignalTestCase(TestCase):
     def test_sending_two_signals(self):
         open_store.send(self.__class__)
         close_store.send(self.__class__, turnover=20000)
+
+    @staticmethod
+    def test_disconnect_signal(self):
+        # TODO 使用disconnect断开接收器和消息的连接，成功断开返回True
+        pizza_done.disconnect(dispatch_uid='pizza_done')
 
