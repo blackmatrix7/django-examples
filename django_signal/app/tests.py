@@ -1,7 +1,6 @@
 from django.test import TestCase
-from.models import Pizza
+from .models import Pizza
 from .signals import pizza_done, close_store, open_store
-from .receivers import receiver_pizza_done
 
 
 # Create your tests here.
