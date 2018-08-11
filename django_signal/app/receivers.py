@@ -29,7 +29,7 @@ def receiver_pizza_done(sender, **kwargs):
 
 # 接收多个信号
 @receiver([open_store, close_store], dispatch_uid='two_signals')
-def receiver_pizza_done(sender, **kwargs):
+def receiver_open_close_store(sender, **kwargs):
     # 假设有一些开关店前必要的准备
     signal = kwargs['signal']
     # 判断开店还是关店，输出对应的文字

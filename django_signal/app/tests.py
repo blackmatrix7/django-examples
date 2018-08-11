@@ -22,8 +22,7 @@ class SignalTestCase(TestCase):
         open_store.send(self.__class__)
         close_store.send(self.__class__, turnover=20000)
 
-    @staticmethod
     def test_disconnect_signal(self):
-        # TODO 使用disconnect断开接收器和消息的连接，成功断开返回True
-        pizza_done.disconnect(dispatch_uid='pizza_done')
+        # 使用disconnect断开接收器和消息的连接，成功断开返回True
+        self.assertTrue(pizza_done.disconnect(dispatch_uid='pizza_done'))
 
