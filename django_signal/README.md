@@ -255,8 +255,9 @@ class Signal:
         else:
             # 反之，第一个元素就是receiver的id
             lookup_key = (_make_id(receiver), _make_id(sender))
-		# 弱引用部分，待完善
+		# 弱引用部分，默认启用
         if weak:
+            # 创建一个弱引用对象
             ref = weakref.ref
             receiver_object = receiver
             if hasattr(receiver, '__self__') and hasattr(receiver, '__func__'):
