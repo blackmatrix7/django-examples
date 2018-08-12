@@ -28,4 +28,5 @@ class SignalTestCase(TestCase):
         self.assertTrue(open_store.disconnect(dispatch_uid='two_signals'))
         # 如果在定义receiver的时候，没有定义了dispatch_uid，那么可以用receiver来断开连接
         self.assertTrue(pizza_done.disconnect(receiver=receiver_pizza_done))
+        # 原因在于，
 

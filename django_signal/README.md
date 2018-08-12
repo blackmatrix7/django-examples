@@ -46,7 +46,7 @@ django.db.models.signals.post_delete
 
 django.db.models.signals.m2m_changed
 
-many to many 关系
+many to many 关系发生改变时发送
 
 **class_prepared**
 
@@ -159,13 +159,45 @@ def receiver_pizza_done(sender, **kwargs):
 
 使用Signal.disconnect方法断开连接，disconnect返回一个Bool对象，为True时代表断开成功，为False代表断开失败。
 
-edisconnect接受receiver或dispatch_uid，receiver为创建的接收者对象，dispatch_uid即接收者唯一的名称。
-
-如果在创建receiver的时候，已经定义dispatch_uid，那么只能用dispatch_uid来断开连接；如果在创建receiver的时候，没有定义dispatch_uid，那么可以用receiver来断开连接。
+disconnect接受receiver或dispatch_uid，receiver为创建的接收者对象，dispatch_uid即接收者唯一的名称。
 
 ```python
 pizza_done.disconnect(dispatch_uid='pizza_done')
 ```
+
+如果在创建receiver的时候，已经定义dispatch_uid，那么只能用dispatch_uid来断开连接；如果在创建receiver的时候，没有定义dispatch_uid，那么可以用receiver来断开连接。
+
+原因可以从Signal的connect方法得知：
+
+django/dispatch/dispatcher.py，line 92
+
+```python
+if dispatch_uid:
+    lookup_key = (dispatch_uid, _make_id(sender))
+else:
+    lookup_key = (_make_id(receiver), _make_id(sender))
+```
+
+当有dispatch_uid时，lookup_key元组的第一个元素为dispatch_uid，反之为receiver的id。
+
+所以在定义receiver时传入dispatch_uid，那么lookup_key应为类似 ('two_signals', 4559985656)，而没有传入dispatch_uid，lookup_key应为类似 (4594979296, 4559985656)。
+
+disconnect方法也是类似的实现，同样根据dispatch_uid生成对应的lookup_key，生成lookup_key的代码是一样的，在dispatcher.py的135行，这里就不再重复贴出。
+
+接着在143行对receiver列表做一个遍历，获取receiver的key，存储在r_key变量中，与lookup_key进行匹配。
+
+如果匹配得上，则移除receiver列表中匹配上的receiver，返回断开成功，并终止循环。
+
+```python
+for index in range(len(self.receivers)):
+                (r_key, _) = self.receivers[index]
+                if r_key == lookup_key:
+                    disconnected = True
+                    del self.receivers[index]
+                    break
+```
+
+所以，最关键的地方在于lookup_key要匹配，connect和disconnect创建lookup_key的代码是一致的，所以如何连接receiver，就传入相同的参数，断开receiver。
 
 ## 参考
 
