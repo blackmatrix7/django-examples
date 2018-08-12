@@ -21,10 +21,12 @@ def after_init_model(sender, **kwargs):
 
 
 # 接受自定义信号
-@receiver(pizza_done, dispatch_uid='pizza_done')
 def receiver_pizza_done(sender, **kwargs):
     print('pizza done!')
     print(kwargs)
+
+
+pizza_done.connect(receiver_pizza_done)
 
 
 # 接收多个信号
@@ -38,7 +40,6 @@ def receiver_open_close_store(sender, **kwargs):
         print('open_store!')
     elif signal is close_store:
         print('close store!')
-
 
 
 if __name__ == '__main__':

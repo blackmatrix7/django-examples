@@ -155,7 +155,17 @@ def receiver_pizza_done(sender, **kwargs):
         print('close store!')
 ```
 
+## 断开信号
 
+使用Signal.disconnect方法断开连接，disconnect返回一个Bool对象，为True时代表断开成功，为False代表断开失败。
+
+edisconnect接受receiver或dispatch_uid，receiver为创建的接收者对象，dispatch_uid即接收者唯一的名称。
+
+如果在创建receiver的时候，已经定义dispatch_uid，那么只能用dispatch_uid来断开连接；如果在创建receiver的时候，没有定义dispatch_uid，那么可以用receiver来断开连接。
+
+```python
+pizza_done.disconnect(dispatch_uid='pizza_done')
+```
 
 ## 参考
 
