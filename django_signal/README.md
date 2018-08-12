@@ -199,6 +199,85 @@ for index in range(len(self.receivers)):
 
 所以，最关键的地方在于lookup_key要匹配，connect和disconnect创建lookup_key的代码是一致的，所以如何连接receiver，就传入相同的参数，断开receiver。
 
+## 源码分析
+
+Django Signal模块的源码都在django/dispatch/dispatcher.py下
+
+详细的源码分析以注释的形式，附在源码中。
+
+### 创建Signal
+
+```python
+class Signal:
+
+    def __init__(self, providing_args=None, use_caching=False):
+        """
+        providing_args 是发送信号需要传入的参数名称
+        use_caching 代表是否使用缓存，默认不使用缓存。
+        """
+        # 实例内创建一个receivers的属性，用于存储接收者列表，默认是一个空list
+        self.receivers = []
+        # 如果没有传入providing_args，会在__init__方法内创建一个空的list。
+        if providing_args is None:
+            providing_args = []
+        # 通过set对信号需要的参数去重
+        self.providing_args = set(providing_args)
+        self.lock = threading.Lock()
+        # 是否使用缓存
+        self.use_caching = use_caching
+        # 如果选择使用缓存，会创建一个弱应用的dict，否则返回一个普通的dict
+        self.sender_receivers_cache = weakref.WeakKeyDictionary() if use_caching else {}
+        self._dead_receivers = False
+
+```
+
+### 连接Signal
+
+```python
+class Signal:
+
+    def connect(self, receiver, sender=None, weak=True, dispatch_uid=None):
+        from django.conf import settings
+        # debug模式下，对receiver做一些检查
+        if settings.configured and settings.DEBUG:
+            # 检查receiver是否是可调用的对象
+            assert callable(receiver), "Signal receivers must be callable."
+            # 通过获取函数签名的形式，对receiver接受的参数进行检查
+            # 至少要求有接受一个通过kwargs传入的参数
+            # 具体的可以看func_accepts_kwargs的实现
+            if not func_accepts_kwargs(receiver):
+                raise ValueError("Signal receivers must accept keyword arguments (**kwargs).")
+		# 创建lookup_key，信号连接接收者和断开接收者都需要通过lookup_key
+        # lookup_key是一个tuple
+        if dispatch_uid:
+         	# 如果连接receiver时，传入dispatch_uid，那么lookup_key的第一个元素就是dispatch_uid
+            lookup_key = (dispatch_uid, _make_id(sender))
+        else:
+            # 反之，第一个元素就是receiver的id
+            lookup_key = (_make_id(receiver), _make_id(sender))
+		# 弱引用部分，待完善
+        if weak:
+            ref = weakref.ref
+            receiver_object = receiver
+            if hasattr(receiver, '__self__') and hasattr(receiver, '__func__'):
+                ref = weakref.WeakMethod
+                receiver_object = receiver.__self__
+            receiver = ref(receiver)
+            weakref.finalize(receiver_object, self._remove_receiver)
+		# 线程锁部分，待完善
+        with self.lock:
+            self._clear_dead_receivers()
+            for r_key, _ in self.receivers:
+                if r_key == lookup_key:
+                    break
+            else:
+                self.receivers.append((lookup_key, receiver))
+            self.sender_receivers_cache.clear()
+	
+```
+
+
+
 ## 参考
 
 > https://docs.djangoproject.com/en/2.0/ref/signals/
